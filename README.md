@@ -37,7 +37,7 @@ Configuration `DEFI` are themselves json dictionary with following fields:
 {
 	"description": "description of the storage (optional)",
 	"type": "local|ssh|s3|swift|http",
-	/STORAGE OPTIONS/
+	/STORAGE_OPTIONS/
 }
 ```
 
@@ -84,8 +84,12 @@ Type of the service is `s3`.
 
 _Storage options_:
 
-* bucket_name, access_key_id=None, secret_access_key=None,
-                 region_name=None, assume_role=None, transfer_config=None
+* (required) `bucket_name`
+* (required) `access_key_id`
+* (required) `secret_access_key`
+* (optional) `region_name`
+* (optional) `assume_role`: arn of assume_role
+* (optional) `transfer_config`: additional transfer configuration parameters as defined here: https://boto3.amazonaws.com/v1/documentation/api/latest/reference/customizations/s3.html.
 
 ### Swift
 
@@ -93,7 +97,9 @@ Type of the service is `swift`.
 
 _Storage options_:
 
-* container_name, auth_config=None, transfer_config=None
+* (required) `container_name`
+* (optional) `auth_config`: if provided, defines the configuration for authentifying to the Open Stack service (https://docs.openstack.org/python-swiftclient/latest/service-api.html#authentication).
+* (optional) `transfer_config`: https://docs.openstack.org/python-swiftclient/latest/service-api.html#configuration
 
 ### HTTP
 
@@ -101,4 +107,11 @@ Type of the service is `http`.
 
 _Storage options_:
 
-* pattern_get, pattern_push=None, pattern_list=None
+* (required) `pattern_get`
+* (required) `pattern_push`
+* (required) `pattern_list`
+
+Note HTTP Storages are not defining all the possible functions:
+
+* `rename` is not defined
+* `exists` and `listdir` are defined only if `pattern_list` option is defined.
