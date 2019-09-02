@@ -49,11 +49,13 @@ from systran.storage import StorageClient
 client = StorageClient(services)
 ```
 
+`cli/storages-cli.py` is giving a comprehensive usage example.
+
 ## Utilisation
 
 The different services are method of the `client` object where `remote_path` is a string with 2 fields: `storage:path`. `storage` is the identifierr of the storage as defined in the configuration dictionary. `path` is the local path.
 
-Paths use `/` delimiter. All path starts at `/` and relative path accessor `.`, `..` are not supported. For the storages with actual directory structure (S3, Swift, ...), a hierarchical file organization is simulated.
+Paths use `/` delimiter. Path starts with `/` and no relative path accessor like `.`, `..` are supported. For the storages with actual directory structure (S3, Swift, ...), a hierarchical file organization is simulated.
 
 ## Services
 
