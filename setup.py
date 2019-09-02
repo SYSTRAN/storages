@@ -8,8 +8,8 @@ setup(
     author_email='jean.senellart@systrangroup.com',
     url='http://www.systransoft.com',
     scripts=['cli/storages-cli'],
-    package_dir={'lib': 'systran'},
-    packages=['lib'],
+    package_dir={'systran': 'lib/systran', 'systran.storages': 'lib/systran/storages'},
+    packages=['systran', 'systran.storages'],
     install_requires=[
         'six',
         'boto',
