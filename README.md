@@ -32,10 +32,19 @@ For each service, the library provides the following functions:
 
 Configuration of the services is done with a json dictionary: `{"key1": DEF1, "key2": DEF2, ..., "keyN": DEFN}`, where `key1`...`keyN` are the identifiers of each storage, and `DEF1`...`DEFN` their configuration.
 
+Configuration `DEFI` are themselves json dictionary with following fields:
+```json
+{
+	"description": "description of the storage (optional)",
+	"type": "local|ssh|s3|swift|http",
+	/STORAGE OPTIONS/
+}
+```
+
 The dictionary is passed to the `StorageClient` constructor:
 
 ```python
-from  systran.storage import StorageClient
+from systran.storage import StorageClient
 
 client = StorageClient(services)
 ```
@@ -44,19 +53,52 @@ client = StorageClient(services)
 
 The different services are method of the `client` object where `remote_path` is a string with 2 fields: `storage:path`. `storage` is the identifierr of the storage as defined in the configuration dictionary. `path` is the local path.
 
+Paths use `/` delimiter. All path starts at `/` and relative path accessor `.`, `..` are not supported. For the storages with actual directory structure (S3, Swift, ...), a hierarchical file organization is simulated.
+
 ## Services
 
 ### Local
 
-Type of the service is `local`. Definition of the service only requires `basedir` (default '/') defining the base directory where files are stored.
+Type of the service is `local`. 
+
+_Storage options_:
+
+* (optional, default `'/'`) `basedir`: defines the base directory where files are stored.
 
 ### SSH
 
+Type of the service is `ssh`.
+
+_Storage options_:
+
+* (required) `server`: name of IP of the remote server
+* (option, default 22) `port`: name of the port to connect to
+* (required) `user`: login to connect with on the server
+* (optional) `password`: user password, preferably use `pkey`
+* (optional) `pkey`: private key used to connect on the service. The value does not include head (`-----BEGIN RSA PRIVATE KEY-----`) and tail (`-----END RSA PRIVATE KEY-----`)
+* (optional, default user home) `basedir`: defines the base directory where files are stored.
+
 ### S3
+
+Type of the service is `s3`.
+
+_Storage options_:
+
+* bucket_name, access_key_id=None, secret_access_key=None,
+                 region_name=None, assume_role=None, transfer_config=None
 
 ### Swift
 
+Type of the service is `swift`.
+
+_Storage options_:
+
+* container_name, auth_config=None, transfer_config=None
+
 ### HTTP
 
+Type of the service is `http`.
 
+_Storage options_:
 
+* pattern_get, pattern_push=None, pattern_list=None
