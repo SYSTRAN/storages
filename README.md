@@ -8,6 +8,7 @@ This library provides a generic interface for interfacing multiple file-storage:
 * storage on remote server over ssh
 * AWS S3 (https://aws.amazon.com/s3/)
 * OpenStack Object Storage service Swift (https://docs.openstack.org/api-ref/object-store/)
+* "HTTP" storage
 
 ## Installation
 
