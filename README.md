@@ -38,7 +38,7 @@ Configuration `DEFI` are themselves json dictionary with following fields:
 {
 	"description": "description of the storage (optional)",
 	"type": "local|ssh|s3|swift|http",
-	/STORAGE_OPTIONS/
+	[STORAGE_OPTIONS]
 }
 ```
 
