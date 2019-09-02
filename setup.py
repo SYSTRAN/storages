@@ -8,8 +8,8 @@ setup(
     author_email='jean.senellart@systrangroup.com',
     url='http://www.systransoft.com',
     scripts=['cli/storages-cli'],
-    package_dir={'client': 'cli/storages-cli', 'lib': 'lib'},
-    packages=['client', 'lib'],
+    package_dir={'lib': 'systran'},
+    packages=['lib'],
     install_requires=[
         'six',
         'boto',
@@ -18,6 +18,7 @@ setup(
         'requests_mock',
         'scp',
         'openstackclient',
+        'jsonschema==2.6.0',
         'packaging>=17.0'
     ]
 )
