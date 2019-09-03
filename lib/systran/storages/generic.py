@@ -147,6 +147,7 @@ class Storage(object):
                 remote_path = os.path.join(remote_path, os.path.basename(local_path))
             dirname = os.path.dirname(remote_path)
             self.mkdir(dirname)
+            LOGGER.info('Uploading file %s to %s', local_path, remote_path)
             self.push_file(local_path, remote_path)
         else:
             def push_rec(local_path, remote_path):

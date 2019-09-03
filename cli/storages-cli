@@ -36,6 +36,11 @@ parser_get.add_argument('storage', type=resolvedpath,
                         help='path to file or directory to download, directory must ends with /')
 parser_get.add_argument('local', type=str, help='local path')
 
+parser_get = subparsers.add_parser('push', help='upload a file or directory')
+parser_get.add_argument('local', type=str, help='local path to file or directory to upload')
+parser_get.add_argument('storage', type=resolvedpath,
+                        help='remote path')
+
 args = parser.parse_args()
 if args.info:
     logging.basicConfig(level=logging.INFO)
@@ -59,3 +64,5 @@ elif args.cmd == "get":
         client.get_directory(args.storage, args.local)
     else:
         client.get_file(args.storage, args.local)
+elif args.cmd == "push":
+    client.push(args.local, args.storage)
