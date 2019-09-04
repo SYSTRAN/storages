@@ -5,6 +5,7 @@ import tempfile
 import shutil
 import logging
 import six
+from datetime import datetime
 
 from .generic import Storage
 from swiftclient.service import SwiftService, SwiftError, SwiftUploadObject, SwiftCopyObject
@@ -61,6 +62,22 @@ class SwiftStorage(Storage):
             LOGGER.debug('Cannot find %s or %s', local_path)
         return False
 
+    def stat(self, remote_path):
+        if not remote_path.endswith('/'):
+            results = self._client.stat(self._container, objects=[remote_path])
+            for r in results:
+                if r['success']:
+                    return {'is_dir': False,
+                            'size': r['headers']['content-length'],
+                            'last_modified': r['headers']['x-timestamp']}
+            remote_path += '/'
+        results = self._client.list(container=self._container, options={"prefix": remote_path,
+                                                                       "delimiter": "/"})
+        for r in results:
+            if r['success']:
+                return {'is_dir': True}
+        return False
+
     def push_file(self, local_path, remote_path):
         (local_dir, basename) = os.path.split(local_path)
         obj = SwiftUploadObject(local_path, object_name=remote_path)
@@ -106,11 +123,13 @@ class SwiftStorage(Storage):
             if page["success"]:
                 for item in page["listing"]:
                     if "subdir" in item:
-                        lsdir[item["subdir"]] = 1
+                        lsdir[item["subdir"]] = {'is_dir': True}
                     else:
                         path = item["name"]
-                        lsdir[path] = 0
-        return lsdir.keys()
+                        last_modified = datetime.strptime(item["last_modified"], '%Y-%m-%dT%H:%M:%S.%f')
+                        lsdir[path] = {'size': item["bytes"],
+                                       'last_modified': datetime.timestamp(last_modified)}
+        return lsdir
 
     def mkdir(self, remote_path):
         pass

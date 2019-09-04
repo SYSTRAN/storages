@@ -8,6 +8,7 @@ import json
 import six
 import os
 import logging
+from datetime import datetime
 
 
 def resolvedpath(path):
@@ -41,6 +42,9 @@ parser_get.add_argument('local', type=str, help='local path to file or directory
 parser_get.add_argument('storage', type=resolvedpath,
                         help='remote path')
 
+parser_stat = subparsers.add_parser('stat', help='returns stat on a remote file/directory')
+parser_stat.add_argument('storage', type=resolvedpath, help='remote path')
+
 args = parser.parse_args()
 if args.info:
     logging.basicConfig(level=logging.INFO)
@@ -55,7 +59,13 @@ with open(args.config) as jsonf:
     client = StorageClient(config=config)
 
 if args.cmd == "list":
-    print(client.listdir(args.storage, args.recursive))
+    listdir = client.listdir(args.storage, args.recursive)
+    for k in sorted(listdir.keys()):
+        if listdir[k].get("is_dir"):
+            print("dir", k)
+        else:
+            date = datetime.fromtimestamp(listdir[k]["last_modified"])
+            print("   ", "%10d" % listdir[k]["size"], date.strftime("%Y-%m-%dT%H:%M:%S"), k)
 elif args.cmd == "get":
     directory = args.storage.endswith('/')
     if directory:
@@ -66,3 +76,5 @@ elif args.cmd == "get":
         client.get_file(args.storage, args.local)
 elif args.cmd == "push":
     client.push(args.local, args.storage)
+elif args.cmd == "stat":
+    print(client.stat(args.storage))

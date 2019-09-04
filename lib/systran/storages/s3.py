@@ -82,6 +82,13 @@ class S3Storage(Storage):
         with open(md5_path, "w") as fw:
             fw.write(obj.e_tag)
 
+    def stat(self, remote_path):
+        obj = self._bucket.Object(remote_path)
+        try:
+            return {'size': obj.content_length, 'last_modified': obj.last_modified.timestamp()}
+        except botocore.exceptions.ClientError:
+            return False
+
     def stream(self, remote_path, buffer_size=1024):
         body = self._s3.Object(self._bucket_name, remote_path).get()['Body']
 
@@ -92,19 +99,21 @@ class S3Storage(Storage):
         return generate()
 
     def listdir(self, remote_path, recursive=False):
-        objects = list(self._bucket.objects.filter(Prefix=remote_path))
-        lsdir = {}
-        for obj in objects:
-            path = obj.key
-            if remote_path == '' or \
-               path == remote_path or remote_path.endswith('/') or path.startswith(remote_path + '/'):
-                p = path.find('/', len(remote_path)+1)
-                if not recursive and p != -1:
-                    path = path[0:p+1]
-                    lsdir[path] = 1
-                else:
-                    lsdir[path] = 0
-        return lsdir.keys()
+        listdir = {}
+        delimiter = '/'
+        if recursive:
+            delimiter = ''
+        list_objects = self._s3.meta.client.list_objects_v2(Bucket=self._bucket_name,
+                                                            Delimiter=delimiter,
+                                                            Prefix=remote_path)
+        if 'CommonPrefixes' in list_objects:
+            for key in list_objects['CommonPrefixes']:
+                listdir[key['Prefix']] = {'is_dir': True}
+        if 'Contents' in list_objects:
+            for key in list_objects['Contents']:
+                listdir[key['Key']] = {'size': key['Size'],
+                                       'last_modified': key['LastModified'].timestamp()}
+        return listdir
 
     def mkdir(self, remote_path):
         pass

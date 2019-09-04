@@ -135,6 +135,12 @@ class StorageClient(object):
         if not os.path.exists(local_path):
             raise RuntimeError('Failed to synchronize %s' % local_path)
 
+    def stat(self, remote_path, storage_id=None):
+        """Returns stat on remote_path file
+        """
+        client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
+        return client.stat(remote_path)
+
     def stream(self, remote_path, buffer_size=1024, storage_id=None):
         """Returns a generator to stream a remote_path file.
         `buffer_size` is the maximal size of each chunk

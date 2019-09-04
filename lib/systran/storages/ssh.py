@@ -97,6 +97,16 @@ class RemoteStorage(Storage):
                 return True
         return False
 
+    def stat(self, remote_path):
+        client = self._connectSCPClient()
+        try:
+            remote_stat = self._connectSFTPClient().stat(remote_path)
+            if S_ISDIR(remote_stat.st_mode):
+                return {'is_dir': True}
+            return {'size': remote_stat.st_size, 'last_modified': remote_stat.st_mtime}
+        except IOError:
+            return False
+
     def stream(self, remote_path, buffer_size=1024):
         client = self._connectSCPClient()
         channel = client._open()
@@ -155,7 +165,7 @@ class RemoteStorage(Storage):
                 client.mkdir(subpath)
 
     def _ls(self, client, remote_path, recursive=False):
-        listfile = []
+        listfile = {}
 
         def getfiles_rec(path):
             for f in client.listdir_attr(path=path):
@@ -164,17 +174,17 @@ class RemoteStorage(Storage):
                     if recursive:
                         getfiles_rec(fullpath)
                     else:
-                        listfile.append(self._external_path(fullpath)+'/')
+                        listfile[self._external_path(fullpath)+'/'] = {'is_dir': True}
                 else:
-                    listfile.append(self._external_path(fullpath))
+                    listfile[self._external_path(fullpath)] = {'size': f.st_size,
+                                                               'last_modified': f.st_mtime}
 
         getfiles_rec(remote_path)
         return listfile
 
     def listdir(self, remote_path, recursive=False):
         client = self._connectSFTPClient()
-        listfile = self._ls(client, remote_path, recursive)
-        return listfile
+        return self._ls(client, remote_path, recursive)
 
     def _delete_single(self, remote_path, isdir):
         client = self._connectSFTPClient()

@@ -207,6 +207,15 @@ class Storage(object):
         """
         raise NotImplementedError()
 
+    def stat(self, remote_path):
+        """Returns statistics about a remote object
+           returns False if object does not exist or dictionary with:
+           - is_dir: BOOL
+           - (optional) size: BYTES
+           - (optional) last_modified: TIMESTAMP
+        """
+        raise NotImplementedError()
+
     @abc.abstractmethod
     def exists(self, remote_path):
         """Check if path is existing

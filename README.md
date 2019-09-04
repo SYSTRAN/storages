@@ -24,9 +24,10 @@ For each service, the library provides the following functions:
 * `get_directory(remote_path, local_path)`: recursively download all the files from a given directory.
 * `stream(remote_path, buffer_size=1024)`: stream the content of the file through a generator function in `buffer_size` packets. If the service does not support streaming, file is first downloaded locally to a temporary directory then streamed.
 * `push(local_path, remote_path)`: push a local file to a remote location
-* `listdir(remote_path, recursive=False)`: list of the files and directory at the `remote_path` location
+* `listdir(remote_path, recursive=False)`: list of the files and directory at the `remote_path` location. Returns dictionary where keys are the file/directory name and values are stat of files/directories.
 * `delete(remote_path, recursive=False)`: delete a file or a directory
 * `rename(remote_path, new_remote_path)`: rename a remote_file
+* `stat(remote_path)`: statistic on file or directory - returns `{'is_dir': True}` for directory, and `{'size': SIZE, 'last_modified': TIMESTAMP}` for files
 * `exists(remote_path)`: check if a remote file or directory exists
 
 ## Configuration
@@ -78,7 +79,7 @@ _Storage options_:
 * (option, default 22) `port`: name of the port to connect to
 * (required) `user`: login to connect with on the server
 * (optional) `password`: user password, preferably use `pkey`
-* (optional) `pkey`: private key used to connect on the service. The value does not include head (`-----BEGIN RSA PRIVATE KEY-----`) and tail (`-----END RSA PRIVATE KEY-----`)
+* (optional) `pkey`: private key used to connect on the service. The value does not include header (`-----BEGIN RSA PRIVATE KEY-----`) and tail (`-----END RSA PRIVATE KEY-----`)
 * (optional, default user home) `basedir`: defines the base directory where files are stored.
 
 ### S3

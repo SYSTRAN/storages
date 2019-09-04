@@ -52,8 +52,17 @@ class LocalStorage(Storage):
         else:
             shutil.rmtree(remote_path, ignore_errors=True)
 
+    def stat(self, remote_path):
+        if os.path.isdir(remote_path):
+            return {'is_dir': True}
+        elif os.path.isfile(remote_path):
+            stat = os.stat(remote_path)
+            return {'size': stat.st_size, 'last_modified': stat.st_mtime}
+        else:
+            return False
+
     def listdir(self, remote_path, recursive=False):
-        listfile = []
+        listfile = {}
         if not os.path.isdir(remote_path):
             raise ValueError("%s is not a directory" % remote_path)
 
@@ -69,9 +78,12 @@ class LocalStorage(Storage):
                     if recursive:
                         getfiles_rec(fullpath)
                     else:
-                        listfile.append(rel_fullpath+'/')
+                        listfile[rel_fullpath+'/'] = {'is_dir': True}
                 else:
-                    listfile.append(rel_fullpath)
+                    if os.path.isfile(fullpath):
+                        stat = os.stat(fullpath)
+                        listfile[rel_fullpath] = {'size': stat.st_size,
+                                                  'last_modified': stat.st_mtime}
 
         getfiles_rec(remote_path)
 
