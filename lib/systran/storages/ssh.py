@@ -201,7 +201,7 @@ class RemoteStorage(Storage):
         client = self._connectSFTPClient()
         try:
             client.stat(remote_path)
-        except IOError:
+        except IOError as e:
             return False
         return True
 
