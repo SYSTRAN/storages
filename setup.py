@@ -1,5 +1,10 @@
 from setuptools import setup
 
+tests_require = [
+    'requests_mock',
+    'pytest==4.*',
+]
+
 setup(
     name='systran.storages',
     version='0.1.0',
@@ -10,15 +15,16 @@ setup(
     scripts=['cli/storages-cli'],
     package_dir={'systran': 'lib/systran', 'systran.storages': 'lib/systran/storages'},
     packages=['systran', 'systran.storages'],
+    tests_require=tests_require,
+    extras_require={
+        "tests": tests_require,
+    },
     install_requires=[
         'six',
-        'boto',
+        'boto3',
         'paramiko',
         'requests',
-        'requests_mock',
         'scp',
         'openstackclient',
-        'jsonschema==2.6.0',
-        'packaging>=17.0'
     ]
 )

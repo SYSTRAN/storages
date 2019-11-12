@@ -1,8 +1,0 @@
-six
-boto3
-paramiko
-requests
-requests_mock
-scp
-openstackclient
-pytest==4.6.5
