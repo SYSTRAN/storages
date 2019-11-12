@@ -7,7 +7,7 @@ import logging
 import six
 from datetime import datetime
 
-from .generic import Storage
+from systran_storages.storages import Storage
 from swiftclient.service import SwiftService, SwiftError, SwiftUploadObject, SwiftCopyObject
 
 logging.getLogger("requests").setLevel(logging.CRITICAL)
