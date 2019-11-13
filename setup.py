@@ -28,6 +28,6 @@ setup(
         'paramiko',
         'requests',
         'scp',
-        'openstackclient',
+        'python-swiftclient',
     ]
 )
