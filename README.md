@@ -12,9 +12,11 @@ This library provides a generic interface for interfacing multiple file-storage:
 
 ## Installation
 
-The full code is available in this repository, the `systran` direcctory contains the library. `cli/storages-cli.py` is a commandline utility allowing to test easily the connections to the different services.
+```
+pip install git+https://github.com/SYSTRAN/storages.git
+```
 
-Alternatively, you can install both from `PyPi` with `pip install systran.storages`.
+This installs the package `systran_storages` and command line utility `systran-storages-cli` allowing to test easily the connections to the different services.
 
 ## Features
 
@@ -46,12 +48,12 @@ Configuration `DEFI` are themselves json dictionary with following fields:
 The dictionary is passed to the `StorageClient` constructor:
 
 ```python
-from systran.storage import StorageClient
+from systran_storages import StorageClient
 
 client = StorageClient(services)
 ```
 
-`cli/storages-cli.py` is giving a comprehensive usage example.
+`systran_storages/bin/storages_cli.py` is giving a comprehensive usage example.
 
 ## Utilisation
 

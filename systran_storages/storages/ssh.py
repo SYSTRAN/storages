@@ -10,7 +10,7 @@ import tempfile
 import shutil
 import logging
 
-from .generic import Storage
+from systran_storages.storages import Storage
 
 LOGGER = logging.getLogger(__name__)
 

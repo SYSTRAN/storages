@@ -5,7 +5,7 @@ import math
 import json
 import time
 
-from systran import storage
+import systran_storages
 
 def test_http_storage_get_dir(tmpdir):
     with requests_mock.Mocker() as m:
@@ -18,7 +18,7 @@ def test_http_storage_get_dir(tmpdir):
             "GET", "http://launcher/model/getfile/model0/checkpoint/model.bin", content=b"model")
         m.register_uri(
             "GET", "http://launcher/model/getfile/model0/config.json", content=b"config")
-        http = storage.HTTPStorage(
+        http = systran_storages.storages.HTTPStorage(
             "0",
             "http://launcher/model/getfile/%s",
             pattern_list="http://launcher/model/listfile/%s")
@@ -31,7 +31,7 @@ def test_http_storage_get_dir(tmpdir):
 
 
 def test_http_stream(tmpdir):
-    http = storage.HTTPStorage("0", "http://www.ovh.net/files/%s")
+    http = systran_storages.storages.HTTPStorage("0", "http://www.ovh.net/files/%s")
     size = 0
     nchunk = 0
     for chunk in http.stream("1Mio.dat"):
@@ -70,27 +70,27 @@ def test_storage_manager(tmpdir):
                     "post_pattern": "herepost/%s"
                 }
     }
-    storages = storage.StorageClient(config=config)
+    storages = systran_storages.StorageClient(config=config)
     s3_models_storage, path = storages._get_storage("s3_models:pathdir/mysupermodel")
-    assert isinstance(s3_models_storage, storage.S3Storage)
+    assert isinstance(s3_models_storage, systran_storages.storages.S3Storage)
     assert path == "pathdir/mysupermodel"
     assert s3_models_storage._storage_id == "s3_models"
 
     s3_models_storage, path = storages._get_storage("pathdir/mysupermodel", "s3_models")
-    assert isinstance(s3_models_storage, storage.S3Storage)
+    assert isinstance(s3_models_storage, systran_storages.storages.S3Storage)
 
     local_storage, path = storages._get_storage("/pathdir/mysupermodel")
-    assert isinstance(local_storage, storage.LocalStorage)
+    assert isinstance(local_storage, systran_storages.storages.LocalStorage)
     assert local_storage._storage_id == "local"
 
     http_storage, path = storages._get_storage("launcher:/hereget/mysupermodel")
-    assert isinstance(http_storage, storage.HTTPStorage)
+    assert isinstance(http_storage, systran_storages.storages.HTTPStorage)
     with pytest.raises(ValueError):
         storages._get_storage("unknown:/hereget/mysupermodel")
 
 
 def test_local_storage(request, tmpdir):
-    storages = storage.StorageClient()
+    storages = systran_storages.StorageClient()
     corpus_dir = str(request.config.rootdir / "corpus")
     storages.get(os.path.join(corpus_dir, "train", "europarl-v7.de-en.10K.tok.de"), str(tmpdir.join("localcopy")))
     assert os.path.isfile(str(tmpdir.join("localcopy")))
@@ -116,7 +116,7 @@ def test_local_storage(request, tmpdir):
 
 
 def test_local_ls(request, tmpdir):
-    localstorage = storage.LocalStorage()
+    localstorage = systran_storages.storages.LocalStorage()
     with pytest.raises(Exception):
         lsdir = localstorage.listdir(str(request.config.rootdir / "nothinghere"))
     lsdir = localstorage.listdir(str(request.config.rootdir / "corpus"))
@@ -132,7 +132,7 @@ def test_storages(request, tmpdir, storages, storage_id):
         return
     corpus_dir = str(request.config.rootdir / "corpus")
 
-    storage_client = storage.StorageClient(config=storages)
+    storage_client = systran_storages.StorageClient(config=storages)
 
     with open(os.path.join(corpus_dir, "vocab", "en-vocab.txt"), "rb") as f:
         en_vocab = f.read()
@@ -282,7 +282,7 @@ def test_storages(request, tmpdir, storages, storage_id):
 
 def test_is_managed_path():
     config = {"s3_models": {}, "s3_test": {}, "launcher": {}}
-    client = storage.StorageClient(config=config)
+    client = systran_storages.StorageClient(config=config)
     assert not client.is_managed_path("/home/ubuntu/file.txt")
     assert not client.is_managed_path(":ubuntu/file.txt")
     assert not client.is_managed_path("storage:ubuntu/file.txt")

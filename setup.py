@@ -1,24 +1,33 @@
-from setuptools import setup
+from setuptools import setup, find_packages
+
+tests_require = [
+    'requests_mock',
+    'pytest==4.*',
+]
 
 setup(
-    name='systran.storages',
+    name='systran-storages',
     version='0.1.0',
     description='systran generic storage implementation',
     author='Jean Senellart',
     author_email='jean.senellart@systrangroup.com',
     url='http://www.systransoft.com',
-    scripts=['cli/storages-cli'],
-    package_dir={'systran': 'lib/systran', 'systran.storages': 'lib/systran/storages'},
-    packages=['systran', 'systran.storages'],
+    packages=find_packages(exclude=["bin"]),
+    entry_points={
+        "console_scripts": [
+            "systran-storages-cli=systran_storages.bin.storages_cli:main",
+        ],
+    },
+    tests_require=tests_require,
+    extras_require={
+        "tests": tests_require,
+    },
     install_requires=[
         'six',
-        'boto',
+        'boto3',
         'paramiko',
         'requests',
-        'requests_mock',
         'scp',
         'openstackclient',
-        'jsonschema==2.6.0',
-        'packaging>=17.0'
     ]
 )

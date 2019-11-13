@@ -3,11 +3,7 @@
 import os
 import logging
 
-from .storages.local import LocalStorage
-from .storages.ssh import RemoteStorage
-from .storages.s3 import S3Storage
-from .storages.swift import SwiftStorage
-from .storages.http import HTTPStorage
+from systran_storages import storages
 
 LOGGER = logging.getLogger(__name__)
 
@@ -55,42 +51,46 @@ class StorageClient(object):
                 config = self._config[storage_id]
                 if config['type'] == 's3':
                     credentials = config.get('aws_credentials', {})
-                    client = S3Storage(storage_id,
-                                       config['bucket'],
-                                       access_key_id=credentials.get('access_key_id'),
-                                       secret_access_key=credentials.get('secret_access_key'),
-                                       region_name=credentials.get('region_name'),
-                                       assume_role=credentials.get('assume_role'),
-                                       transfer_config=credentials.get('transfer_config'))
+                    client = storages.S3Storage(
+                        storage_id,
+                        config['bucket'],
+                        access_key_id=credentials.get('access_key_id'),
+                        secret_access_key=credentials.get('secret_access_key'),
+                        region_name=credentials.get('region_name'),
+                        assume_role=credentials.get('assume_role'),
+                        transfer_config=credentials.get('transfer_config'))
                 elif config['type'] == 'swift':
-                    client = SwiftStorage(storage_id,
-                                          config['container'],
-                                          auth_config=config.get('auth_config'),
-                                          transfer_config=config.get('transfer_config')
-                                          )
+                    client = storages.SwiftStorage(
+                        storage_id,
+                        config['container'],
+                        auth_config=config.get('auth_config'),
+                        transfer_config=config.get('transfer_config'))
                 elif config['type'] == 'ssh':
-                    client = RemoteStorage(storage_id,
-                                           config['server'],
-                                           config['user'],
-                                           config.get('password'),
-                                           config.get('pkey'),
-                                           port=config.get('port', 22),
-                                           basedir=config.get('basedir'))
+                    client = storages.RemoteStorage(
+                        storage_id,
+                        config['server'],
+                        config['user'],
+                        config.get('password'),
+                        config.get('pkey'),
+                        port=config.get('port', 22),
+                        basedir=config.get('basedir'))
                 elif config['type'] == 'http':
-                    client = HTTPStorage(storage_id,
-                                         config['get_pattern'],
-                                         pattern_push=config.get('post_pattern'),
-                                         pattern_list=config.get('list_pattern'))
+                    client = storages.HTTPStorage(
+                        storage_id,
+                        config['get_pattern'],
+                        pattern_push=config.get('post_pattern'),
+                        pattern_list=config.get('list_pattern'))
                 elif config['type'] == 'local':
-                    client = LocalStorage(storage_id,
-                                          basedir=config.get("basedir"))
+                    client = storages.LocalStorage(
+                        storage_id,
+                        basedir=config.get("basedir"))
                 else:
                     raise ValueError('unsupported storage type %s for %s' % (config['type'], storage_id))
                 self._storages[storage_id] = client
             else:
                 client = self._storages[storage_id]
         else:
-            client = LocalStorage()
+            client = storages.LocalStorage()
 
         return client, client._internal_path(path)
 
