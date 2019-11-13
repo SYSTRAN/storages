@@ -2,21 +2,21 @@
 
 ## Overview
 
-This library provides a generic interface for interfacing multiple file-storage:
+This library provides a generic interface for multiple file storages:
 
-* local
-* storage on remote server over ssh
+* local storage
+* remote storage via SSH
 * AWS S3 (https://aws.amazon.com/s3/)
 * OpenStack Object Storage service Swift (https://docs.openstack.org/api-ref/object-store/)
-* "HTTP" storage
+* custom HTTP storage
 
 ## Installation
 
 ```
-pip install git+https://github.com/SYSTRAN/storages.git
+pip install https://github.com/SYSTRAN/storages/archive/master.tar.gz
 ```
 
-This installs the package `systran_storages` and command line utility `systran-storages-cli` allowing to test easily the connections to the different services.
+This installs the package `systran-storages` and command line utility `systran-storages-cli` allowing to easily test the connections to the different services.
 
 ## Features
 
@@ -26,6 +26,7 @@ For each service, the library provides the following functions:
 * `get_directory(remote_path, local_path)`: recursively download all the files from a given directory.
 * `stream(remote_path, buffer_size=1024)`: stream the content of the file through a generator function in `buffer_size` packets. If the service does not support streaming, file is first downloaded locally to a temporary directory then streamed.
 * `push(local_path, remote_path)`: push a local file to a remote location
+* `mkdir(local_path, remote_path)`: create a remote directory
 * `listdir(remote_path, recursive=False)`: list of the files and directory at the `remote_path` location. Returns dictionary where keys are the file/directory name and values are stat of files/directories.
 * `delete(remote_path, recursive=False)`: delete a file or a directory
 * `rename(remote_path, new_remote_path)`: rename a remote_file
@@ -34,9 +35,9 @@ For each service, the library provides the following functions:
 
 ## Configuration
 
-Configuration of the services is done with a json dictionary: `{"key1": DEF1, "key2": DEF2, ..., "keyN": DEFN}`, where `key1`...`keyN` are the identifiers of each storage, and `DEF1`...`DEFN` their configuration.
+Configuration of the services is done with a JSON dictionary: `{"key1": DEF1, "key2": DEF2, ..., "keyN": DEFN}`, where `key1`...`keyN` are the identifiers of each storage, and `DEF1`...`DEFN` their configuration.
 
-Configuration `DEFI` are themselves json dictionary with following fields:
+Configurations `DEFI` are JSON dictionary with following fields:
 ```json
 {
 	"description": "description of the storage (optional)",
@@ -53,11 +54,14 @@ from systran_storages import StorageClient
 client = StorageClient(services)
 ```
 
-`systran_storages/bin/storages_cli.py` is giving a comprehensive usage example.
+`systran_storages/bin/storages_cli.py` gives a comprehensive usage example.
 
-## Utilisation
+## Usage
 
-The different services are method of the `client` object where `remote_path` is a string with 2 fields: `storage:path`. `storage` is the identifierr of the storage as defined in the configuration dictionary. `path` is the local path.
+The different services are method of the `client` object where `remote_path` is a string in the format `storage:path`:
+
+* `storage` is the identifier of the storage as defined in the configuration dictionary
+* `path` is a path relative to the storage referenced by `storage`
 
 Paths use `/` delimiter. Path starts with `/` and no relative path accessor like `.`, `..` are supported. For the storages with actual directory structure (S3, Swift, ...), a hierarchical file organization is simulated.
 
@@ -117,7 +121,7 @@ _Storage options_:
 * (required) `pattern_push`
 * (required) `pattern_list`
 
-Note HTTP Storages are not defining all the possible functions:
+Note HTTP storages do not define all the possible functions:
 
 * `rename` is not defined
 * `exists` and `listdir` are defined only if `pattern_list` option is defined.
