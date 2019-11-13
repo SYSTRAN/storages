@@ -86,11 +86,19 @@ class Storage(object):
             LOGGER.warning('%s does not exist on the remote but %s exists locally, continuing',
                            remote_path, local_path)
             return
+        try:
+            if not self.exists(remote_path):
+                LOGGER.warning('%s does not exist on the remote', remote_path)
+                return
+        except NotImplementedError:
+            pass
 
         if directory is None:
             directory = self.isdir(remote_path)
 
         if directory:
+            if not os.path.isdir(local_path):
+                os.makedirs(local_path)
             with lock(local_path):
                 allfiles = {}
                 for root, dirs, files in os.walk(local_path):
@@ -122,7 +130,10 @@ class Storage(object):
                 for f in allfiles:
                     os.remove(f)
                 if check_integrity_fn is not None and not check_integrity_fn(local_path):
-                    shutil.rmtree(local_path)
+                    try:
+                        shutil.rmtree(local_path)
+                    except:
+                        pass
                     raise RuntimeError('integrity check failed on %s' % local_path)
         else:
             self._sync_file(remote_path, local_path)
@@ -190,7 +201,7 @@ class Storage(object):
                 files = self.listdir(remote_path=path)
                 for f in files:
                     internal_path = self._internal_path(f)
-                    if internal_path.endswith('/'):
+                    if internal_path.endswith('/') and internal_path != path:
                         rm_rec(internal_path)
                     else:
                         self._delete_single(internal_path, False)
