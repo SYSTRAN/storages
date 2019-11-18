@@ -2,6 +2,7 @@
 
 import os
 import boto3
+import datetime
 import tempfile
 import shutil
 import logging
@@ -113,7 +114,7 @@ class S3Storage(Storage):
         if 'Contents' in list_objects:
             for key in list_objects['Contents']:
                 listdir[key['Key']] = {'size': key['Size'],
-                                       'last_modified': key['LastModified'].timestamp()}
+                                       'last_modified': _datetime_to_timestamp(key['LastModified'])}
         return listdir
 
     def mkdir(self, remote_path):
@@ -185,3 +186,12 @@ class S3Storage(Storage):
         if path.startswith('/'):
             return path[1:]
         return path
+
+
+def _datetime_to_timestamp(date):
+    if hasattr(date, "timestamp") and callable(date.timestamp):
+        return date.timestamp()
+    else:
+        utc_naive  = date.replace(tzinfo=None) - date.utcoffset()
+        timestamp = (utc_naive - datetime.datetime(1970, 1, 1)).total_seconds()
+        return timestamp
