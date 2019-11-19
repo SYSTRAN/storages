@@ -176,7 +176,6 @@ class StorageClient(object):
 
         client.mkdir(full_path)
 
-
     def listdir(self, remote_path, recursive=False, storage_id=None):
         """Lists of the files on a storage:
         * if `recursive` returns all of the files present recursively in the directory

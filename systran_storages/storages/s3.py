@@ -2,11 +2,12 @@
 
 import os
 import boto3
-import datetime
 import tempfile
 import shutil
 import logging
+import botocore
 
+from systran_storages.storages.utils import datetime_to_timestamp
 from systran_storages.storages import Storage
 
 LOGGER = logging.getLogger(__name__)
@@ -87,7 +88,7 @@ class S3Storage(Storage):
     def stat(self, remote_path):
         obj = self._bucket.Object(remote_path)
         try:
-            return {'size': obj.content_length, 'last_modified': obj.last_modified.timestamp()}
+            return {'size': obj.content_length, 'last_modified': datetime_to_timestamp(obj.last_modified)}
         except botocore.exceptions.ClientError:
             return False
 
@@ -114,7 +115,9 @@ class S3Storage(Storage):
         if 'Contents' in list_objects:
             for key in list_objects['Contents']:
                 listdir[key['Key']] = {'size': key['Size'],
-                                       'last_modified': _datetime_to_timestamp(key['LastModified'])}
+                                       'last_modified': datetime_to_timestamp(key['LastModified'])}
+                if key['Key'].endswith('/'):
+                    listdir[key['Key']]['is_dir'] = True
         return listdir
 
     def mkdir(self, remote_path):
@@ -123,7 +126,7 @@ class S3Storage(Storage):
         if result:
             return
 
-        if remote_path.startswith("/"): # S3 create a empty directory if /
+        if remote_path.startswith("/"):  # S3 create a empty directory if /
             remote_path = remote_path[1:]
 
         if not remote_path.endswith("/"):  # to simulate a directory in S3
@@ -136,7 +139,6 @@ class S3Storage(Storage):
 
         if not self.exists(remote_path):
             raise ValueError("cannot create the directory %s" % remote_path)
-
 
     def _delete_single(self, remote_path, isdir):
         if not isdir:
@@ -158,7 +160,7 @@ class S3Storage(Storage):
             self._s3.Object(self._bucket_name, src_key).delete()
 
         # Warning: create the new virtual directory. if not, an empty directory will be deleted instead of being renamed
-        #important to do it at last because filter by prefix could delete the new directory
+        # important to do it at last because filter by prefix could delete the new directory
         if is_dir:
             self.mkdir(new_remote_path)
 
@@ -186,12 +188,3 @@ class S3Storage(Storage):
         if path.startswith('/'):
             return path[1:]
         return path
-
-
-def _datetime_to_timestamp(date):
-    if hasattr(date, "timestamp") and callable(date.timestamp):
-        return date.timestamp()
-    else:
-        utc_naive  = date.replace(tzinfo=None) - date.utcoffset()
-        timestamp = (utc_naive - datetime.datetime(1970, 1, 1)).total_seconds()
-        return timestamp
