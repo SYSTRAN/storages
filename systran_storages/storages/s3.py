@@ -5,6 +5,7 @@ import boto3
 import tempfile
 import shutil
 import logging
+import botocore
 
 from systran_storages.storages.utils import datetime_to_timestamp
 from systran_storages.storages import Storage
@@ -115,6 +116,8 @@ class S3Storage(Storage):
             for key in list_objects['Contents']:
                 listdir[key['Key']] = {'size': key['Size'],
                                        'last_modified': datetime_to_timestamp(key['LastModified'])}
+                if key['Key'].endswith('/'):
+                    listdir[key['Key']]['is_dir'] = True
         return listdir
 
     def mkdir(self, remote_path):
@@ -123,7 +126,7 @@ class S3Storage(Storage):
         if result:
             return
 
-        if remote_path.startswith("/"): # S3 create a empty directory if /
+        if remote_path.startswith("/"):  # S3 create a empty directory if /
             remote_path = remote_path[1:]
 
         if not remote_path.endswith("/"):  # to simulate a directory in S3
@@ -136,7 +139,6 @@ class S3Storage(Storage):
 
         if not self.exists(remote_path):
             raise ValueError("cannot create the directory %s" % remote_path)
-
 
     def _delete_single(self, remote_path, isdir):
         if not isdir:
@@ -158,7 +160,7 @@ class S3Storage(Storage):
             self._s3.Object(self._bucket_name, src_key).delete()
 
         # Warning: create the new virtual directory. if not, an empty directory will be deleted instead of being renamed
-        #important to do it at last because filter by prefix could delete the new directory
+        # important to do it at last because filter by prefix could delete the new directory
         if is_dir:
             self.mkdir(new_remote_path)
 
