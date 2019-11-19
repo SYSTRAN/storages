@@ -6,7 +6,7 @@ import shutil
 import logging
 import six
 from datetime import datetime
-
+from systran_storages.storages.utils import datetime_to_timestamp
 from systran_storages.storages import Storage
 from swiftclient.service import SwiftService, SwiftError, SwiftUploadObject, SwiftCopyObject
 
@@ -128,7 +128,7 @@ class SwiftStorage(Storage):
                         path = item["name"]
                         last_modified = datetime.strptime(item["last_modified"], '%Y-%m-%dT%H:%M:%S.%f')
                         lsdir[path] = {'size': item["bytes"],
-                                       'last_modified': datetime.timestamp(last_modified)}
+                                       'last_modified': datetime_to_timestamp(last_modified)}
         return lsdir
 
     def mkdir(self, remote_path):
