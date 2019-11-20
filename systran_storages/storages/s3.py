@@ -102,6 +102,8 @@ class S3Storage(Storage):
         return generate()
 
     def listdir(self, remote_path, recursive=False):
+        if not remote_path.endswith('/'):
+            remote_path += '/'
         listdir = {}
         delimiter = '/'
         if recursive:
