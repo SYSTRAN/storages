@@ -78,6 +78,9 @@ class SwiftStorage(Storage):
         return False
 
     def push_file(self, local_path, remote_path):
+        (local_dir, basename) = os.path.split(local_path)
+        if not remote_path:
+            remote_path = basename
         obj = SwiftUploadObject(local_path, object_name=remote_path)
         results = self._client.upload(self._container, [obj])
         has_results = False
@@ -111,7 +114,7 @@ class SwiftStorage(Storage):
         return generate()
 
     def listdir(self, remote_path, recursive=False):
-        if not remote_path.endswith('/'):
+        if remote_path != '' and not remote_path.endswith('/'):
             remote_path += '/'
         options = {"prefix": remote_path}
         if not recursive:
