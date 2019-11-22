@@ -80,6 +80,8 @@ class S3Storage(Storage):
     def push_file(self, local_path, remote_path):
         (local_dir, basename) = os.path.split(local_path)
         md5_path = os.path.join(local_dir, ".5dm#"+basename+"#md5")
+        if not remote_path:
+            remote_path = basename
         self._bucket.upload_file(local_path, remote_path, Config=self._transfer_config)
         obj = self._bucket.Object(remote_path)
         with open(md5_path, "w") as fw:
