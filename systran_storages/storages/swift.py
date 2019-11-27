@@ -22,7 +22,6 @@ class SwiftStorage(Storage):
     def __init__(self, storage_id, container_name, auth_config=None, transfer_config=None):
         super(SwiftStorage, self).__init__(storage_id)
         opts = transfer_config or {}
-        opts["auth_version"] = "2.0"
         if auth_config:
             for k, v in six.iteritems(auth_config):
                 opts[k] = v
