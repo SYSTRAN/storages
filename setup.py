@@ -29,5 +29,6 @@ setup(
         'requests',
         'scp',
         'python-swiftclient',
+        'python-keystoneclient'
     ]
 )

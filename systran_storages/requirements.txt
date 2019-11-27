@@ -1,0 +1,7 @@
+six
+boto3
+paramiko
+requests
+scp
+python-swiftclient
+python-keystoneclient
