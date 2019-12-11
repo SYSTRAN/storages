@@ -61,8 +61,13 @@ class LocalStorage(Storage):
         else:
             return False
 
-    def listdir(self, remote_path, recursive=False):
+    def listdir(self, remote_path, recursive=False, is_file=False):
         listfile = {}
+
+        if is_file:
+            stat = os.stat(remote_path)
+            return {remote_path: {'size': stat.st_size, 'last_modified': stat.st_mtime}}
+
         if not os.path.isdir(remote_path):
             raise ValueError("%s is not a directory" % remote_path)
 

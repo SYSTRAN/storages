@@ -164,27 +164,31 @@ class RemoteStorage(Storage):
             if subpath != '' and not self.exists(subpath):
                 client.mkdir(subpath)
 
-    def _ls(self, client, remote_path, recursive=False):
+    def _ls(self, client, remote_path, recursive=False, is_file=False):
         listfile = {}
 
         def getfiles_rec(path):
-            for f in client.listdir_attr(path=path):
-                fullpath = os.path.join(path, f.filename)
-                if S_ISDIR(f.st_mode):
-                    if recursive:
-                        getfiles_rec(fullpath)
+            if is_file:
+                file_stat = client.stat(path)
+                listfile[self._external_path(path)] = {'size': file_stat.st_size, 'last_modified': file_stat.st_mtime}
+            else:
+                for f in client.listdir_attr(path=path):
+                    fullpath = os.path.join(path, f.filename)
+                    if S_ISDIR(f.st_mode):
+                        if recursive:
+                            getfiles_rec(fullpath)
+                        else:
+                            listfile[self._external_path(fullpath)+'/'] = {'is_dir': True}
                     else:
-                        listfile[self._external_path(fullpath)+'/'] = {'is_dir': True}
-                else:
-                    listfile[self._external_path(fullpath)] = {'size': f.st_size,
-                                                               'last_modified': f.st_mtime}
+                        listfile[self._external_path(fullpath)] = {'size': f.st_size,
+                                                                   'last_modified': f.st_mtime}
 
         getfiles_rec(remote_path)
         return listfile
 
-    def listdir(self, remote_path, recursive=False):
+    def listdir(self, remote_path, recursive=False, is_file=False):
         client = self._connectSFTPClient()
-        return self._ls(client, remote_path, recursive)
+        return self._ls(client, remote_path, recursive, is_file)
 
     def _delete_single(self, remote_path, isdir):
         client = self._connectSFTPClient()
