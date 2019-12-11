@@ -76,7 +76,7 @@ class HTTPStorage(Storage):
     def mkdir(self, remote_path):
         return
 
-    def isdir(self, remote_path, is_file=False):
+    def isdir(self, remote_path):
         if remote_path.endswith('/'):
             return True
         return False
