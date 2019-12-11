@@ -56,7 +56,7 @@ class HTTPStorage(Storage):
                     remote_path,
                     res.status_code))
 
-    def listdir(self, remote_path, recursive=False):
+    def listdir(self, remote_path, recursive=False, is_file=False):
         if self._pattern_list is None:
             raise ValueError('http storage %s can not handle list request' % self._storage_id)
 

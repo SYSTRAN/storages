@@ -184,6 +184,18 @@ class StorageClient(object):
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
         return client.listdir(remote_path, recursive)
 
+    def list(self, remote_path, recursive=False, storage_id=None):
+        """Lists of the files on a storage:
+        * if `recursive` returns all of the files present recursively in the directory
+        * if not `recursive` returns only first level, directory are indicated with trailing '/'
+        """
+        client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
+
+        if client.isdir(remote_path):
+            return client.listdir(remote_path, recursive)
+        else:
+            return client.listdir(remote_path, recursive, True)
+
     def delete(self, remote_path, recursive=False, storage_id=None):
         """Deletes a file or directory from a storage."""
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
