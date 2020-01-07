@@ -10,7 +10,7 @@ def pytest_generate_tests(metafunc):
 
     if 'storages' in config:
         if 'storage_id' in metafunc.fixturenames:
-                metafunc.parametrize("storage_id", config["storages"].keys())
+            metafunc.parametrize("storage_id", config["storages"].keys())
 
         if 'storages' in metafunc.fixturenames:
-                metafunc.parametrize("storages", [config["storages"]])
+            metafunc.parametrize("storages", [config["storages"]])
