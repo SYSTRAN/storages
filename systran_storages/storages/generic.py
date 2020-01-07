@@ -1,14 +1,17 @@
 import os
 import abc
-import six
 import fcntl
 import contextlib
 import shutil
 import logging
 
+import six
+
+
 LOGGER = logging.getLogger(__name__)
 
 _META_SUBDIR = '.snw'
+
 
 @contextlib.contextmanager
 def lock(fname):
@@ -28,6 +31,7 @@ def lock(fname):
         fcntl.lockf(f, fcntl.LOCK_EX)
         yield
         fcntl.lockf(f, fcntl.LOCK_UN)
+
 
 @six.add_metaclass(abc.ABCMeta)
 class Storage(object):
@@ -85,8 +89,9 @@ class Storage(object):
         try:
             if not self.exists(remote_path):
                 if os.path.exists(local_path):
-                    LOGGER.warning('%s does not exist on the remote but %s exists locally, continuing',
-                                   remote_path, local_path)
+                    LOGGER.warning(
+                        '%s does not exist on the remote but %s exists locally, continuing',
+                        remote_path, local_path)
                 else:
                     LOGGER.warning('%s does not exist on the remote', remote_path)
                 return
@@ -112,7 +117,7 @@ class Storage(object):
                     internal_path = self._internal_path(f)
                     norm_path = os.path.normpath(remote_path)
                     assert internal_path.startswith(norm_path)
-                    subpath = internal_path[len(norm_path)+1:]
+                    subpath = internal_path[len(norm_path) + 1:]
                     path = os.path.join(local_path, subpath)
                     if f.endswith('/'):
                         if not os.path.isdir(path):
@@ -172,6 +177,7 @@ class Storage(object):
                         push_rec(local_filepath, remote_filepath)
                     else:
                         self.push(local_filepath, remote_filepath)
+
             push_rec(local_path, remote_path)
 
     @abc.abstractmethod
@@ -206,6 +212,7 @@ class Storage(object):
                     else:
                         self._delete_single(internal_path, False)
                 self._delete_single(path, True)
+
             if not recursive:
                 raise ValueError("non recursive delete can not delete directory")
             rm_rec(remote_path)

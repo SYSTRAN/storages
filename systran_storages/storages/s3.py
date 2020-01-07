@@ -1,16 +1,18 @@
 """Definition of `s3` storage class"""
 
 import os
-import boto3
 import tempfile
 import shutil
 import logging
+
 import botocore
+import boto3
 
 from systran_storages.storages.utils import datetime_to_timestamp
 from systran_storages.storages import Storage
 
 LOGGER = logging.getLogger(__name__)
+
 
 class S3Storage(Storage):
     """Storage on Amazon S3."""
@@ -20,7 +22,9 @@ class S3Storage(Storage):
         super(S3Storage, self).__init__(storage_id)
         if assume_role is not None:
             if not assume_role.get('role_arn') or not assume_role.get('role_session_name'):
-                raise ValueError('invalid "assume_role" configuration: "role_arn" and "role_session_name" are required')
+                raise ValueError(
+                    'invalid "assume_role" configuration: "role_arn" and "role_session_name" are '
+                    'required')
             session_duration = 3600
             if assume_role.get('session_duration') is not None:
                 session_duration = assume_role.get('session_duration')
@@ -29,11 +33,13 @@ class S3Storage(Storage):
                                       aws_secret_access_key=secret_access_key,
                                       region_name=region_name)
             response_assume_role = sts_client.assume_role(RoleArn=assume_role.get('role_arn'),
-                                                          RoleSessionName=assume_role.get('role_session_name'),
+                                                          RoleSessionName=assume_role.get(
+                                                              'role_session_name'),
                                                           DurationSeconds=session_duration)
-            session = boto3.Session(aws_access_key_id=response_assume_role['Credentials']['AccessKeyId'],
-                                    aws_secret_access_key=response_assume_role['Credentials']['SecretAccessKey'],
-                                    aws_session_token=response_assume_role['Credentials']['SessionToken'])
+            session = boto3.Session(
+                aws_access_key_id=response_assume_role['Credentials']['AccessKeyId'],
+                aws_secret_access_key=response_assume_role['Credentials']['SecretAccessKey'],
+                aws_session_token=response_assume_role['Credentials']['SessionToken'])
         else:
             session = boto3.Session(
                 aws_access_key_id=access_key_id,
@@ -49,7 +55,7 @@ class S3Storage(Storage):
 
     def _get_file_safe(self, remote_path, local_path):
         (local_dir, basename) = os.path.split(local_path)
-        md5_path = os.path.join(local_dir, ".5dm#"+basename+"#md5")
+        md5_path = os.path.join(local_dir, ".5dm#" + basename + "#md5")
         with tempfile.NamedTemporaryFile(delete=False) as tmpfile:
             self._bucket.download_file(remote_path, tmpfile.name, Config=self._transfer_config)
             shutil.move(tmpfile.name, local_path)
@@ -59,7 +65,7 @@ class S3Storage(Storage):
 
     def _check_existing_file(self, remote_path, local_path):
         (local_dir, basename) = os.path.split(local_path)
-        md5_path = os.path.join(local_dir, ".5dm#"+basename+"#md5")
+        md5_path = os.path.join(local_dir, ".5dm#" + basename + "#md5")
         if os.path.exists(local_path) and os.path.exists(md5_path):
             with open(md5_path) as f:
                 md5 = f.read()
@@ -75,11 +81,11 @@ class S3Storage(Storage):
         """return checksum sum used by storage or None
         """
         (local_dir, basename) = os.path.split(local_path)
-        return os.path.join(local_dir, ".5dm#"+basename+"#md5")
+        return os.path.join(local_dir, ".5dm#" + basename + "#md5")
 
     def push_file(self, local_path, remote_path):
         (local_dir, basename) = os.path.split(local_path)
-        md5_path = os.path.join(local_dir, ".5dm#"+basename+"#md5")
+        md5_path = os.path.join(local_dir, ".5dm#" + basename + "#md5")
         if not remote_path:
             remote_path = basename
         self._bucket.upload_file(local_path, remote_path, Config=self._transfer_config)
@@ -90,7 +96,8 @@ class S3Storage(Storage):
     def stat(self, remote_path):
         obj = self._bucket.Object(remote_path)
         try:
-            return {'size': obj.content_length, 'last_modified': datetime_to_timestamp(obj.last_modified)}
+            return {'size': obj.content_length,
+                    'last_modified': datetime_to_timestamp(obj.last_modified)}
         except botocore.exceptions.ClientError:
             return False
 
@@ -163,8 +170,9 @@ class S3Storage(Storage):
                 self._s3.Object(self._bucket_name, dest_file_key).copy_from(CopySource=copy_source)
             self._s3.Object(self._bucket_name, src_key).delete()
 
-        # Warning: create the new virtual directory. if not, an empty directory will be deleted instead of being renamed
-        # important to do it at last because filter by prefix could delete the new directory
+        # Warning: create the new virtual directory. if not, an empty directory will be deleted
+        # instead of being renamed important to do it at last because filter by prefix could
+        # delete the new directory
         if is_dir:
             self.mkdir(new_remote_path)
 
@@ -183,7 +191,7 @@ class S3Storage(Storage):
 
     def isdir(self, remote_path):
         if not remote_path.endswith('/'):
-            return self.exists(remote_path+'/')
+            return self.exists(remote_path + '/')
         return self.exists(remote_path)
 
     def _internal_path(self, path):

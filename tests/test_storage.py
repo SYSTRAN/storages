@@ -1,11 +1,12 @@
 import os
-import requests_mock
-import pytest
 import math
-import json
 import time
 
+import requests_mock
+import pytest
+
 import systran_storages
+
 
 def test_http_storage_get_dir(tmpdir):
     with requests_mock.Mocker() as m:
@@ -37,38 +38,38 @@ def test_http_stream(tmpdir):
     for chunk in http.stream("1Mio.dat"):
         size += len(chunk)
         nchunk += 1
-    assert size == 1024*1024 and nchunk == 1024
+    assert size == 1024 * 1024 and nchunk == 1024
 
 
 def test_storage_manager(tmpdir):
     config = {
-                "s3_models": {
-                    "description": "model storage on S3",
-                    "type": "s3",
-                    "bucket": "my-model-storage",
-                    "aws_credentials": {
-                        "access_key_id": "AAAAAAAAAAAAAAAAAAAA",
-                        "secret_access_key": "abcdefghijklmnopqrstuvwxyz0123456789ABCD",
-                        "region_name": "us-east-2"
-                    },
-                    "default_ms": True
-                },
-                "s3_test": {
-                    "description": "some test files",
-                    "type": "s3",
-                    "bucket": "my-testfiles-storage",
-                    "aws_credentials": {
-                        "access_key_id": "AAAAAAAAAAAAAAAAAAAA",
-                        "secret_access_key": "abcdefghijklmnopqrstuvwxyz0123456789ABCD",
-                        "region_name": "us-east-2"
-                    }
-                },
-                "launcher": {
-                    "description": "launcher file storage",
-                    "type": "http",
-                    "get_pattern": "hereget/%s",
-                    "post_pattern": "herepost/%s"
-                }
+        "s3_models": {
+            "description": "model storage on S3",
+            "type": "s3",
+            "bucket": "my-model-storage",
+            "aws_credentials": {
+                "access_key_id": "AAAAAAAAAAAAAAAAAAAA",
+                "secret_access_key": "abcdefghijklmnopqrstuvwxyz0123456789ABCD",
+                "region_name": "us-east-2"
+            },
+            "default_ms": True
+        },
+        "s3_test": {
+            "description": "some test files",
+            "type": "s3",
+            "bucket": "my-testfiles-storage",
+            "aws_credentials": {
+                "access_key_id": "AAAAAAAAAAAAAAAAAAAA",
+                "secret_access_key": "abcdefghijklmnopqrstuvwxyz0123456789ABCD",
+                "region_name": "us-east-2"
+            }
+        },
+        "launcher": {
+            "description": "launcher file storage",
+            "type": "http",
+            "get_pattern": "hereget/%s",
+            "post_pattern": "herepost/%s"
+        }
     }
     storages = systran_storages.StorageClient(config=config)
     s3_models_storage, path = storages._get_storage("s3_models:pathdir/mysupermodel")
@@ -92,7 +93,8 @@ def test_storage_manager(tmpdir):
 def test_local_storage(request, tmpdir):
     storages = systran_storages.StorageClient()
     corpus_dir = str(request.config.rootdir / "corpus")
-    storages.get(os.path.join(corpus_dir, "train", "europarl-v7.de-en.10K.tok.de"), str(tmpdir.join("localcopy")))
+    storages.get(os.path.join(corpus_dir, "train", "europarl-v7.de-en.10K.tok.de"),
+                 str(tmpdir.join("localcopy")))
     assert os.path.isfile(str(tmpdir.join("localcopy")))
 
     storages.rename(str(tmpdir.join("localcopy")), str(tmpdir.join("localcopy2")))
@@ -121,11 +123,12 @@ def test_local_ls(request, tmpdir):
         lsdir = localstorage.listdir(str(request.config.rootdir / "nothinghere"))
     lsdir = localstorage.listdir(str(request.config.rootdir / "corpus"))
     assert len(lsdir) == 3
-    assert str(pytest.config.rootdir / "corpus" / "train")+"/" in lsdir
-    assert str(pytest.config.rootdir / "corpus" / "vocab")+"/" in lsdir
-    assert str(pytest.config.rootdir / "corpus" / "eval")+"/" in lsdir
+    assert str(pytest.config.rootdir / "corpus" / "train") + "/" in lsdir
+    assert str(pytest.config.rootdir / "corpus" / "vocab") + "/" in lsdir
+    assert str(pytest.config.rootdir / "corpus" / "eval") + "/" in lsdir
     lsdirrec = localstorage.listdir(str(request.config.rootdir / "corpus"), True)
     assert len(lsdirrec) > len(lsdir)
+
 
 def test_storages(request, tmpdir, storages, storage_id):
     if storage_id.startswith('_'):
@@ -166,30 +169,36 @@ def test_storages(request, tmpdir, storages, storage_id):
                                  storage_id=storage_id)
     # pushing a file to a new file
     storage_client.push(os.path.join(corpus_dir, "train", "europarl-v7.de-en.10K.tok.de"),
-                        os.path.join("myremotedirectory", "test", "copy-europarl-v7.de-en.10K.tok.de"),
+                        os.path.join("myremotedirectory", "test",
+                                     "copy-europarl-v7.de-en.10K.tok.de"),
                         storage_id=storage_id)
     # pushing a file to a new file on a completely new directory
-    if storage_client.exists(storage_id+":"+os.path.join("myremotedirectory-new/")):
+    if storage_client.exists(storage_id + ":" + os.path.join("myremotedirectory-new/")):
         storage_client.delete(os.path.join("myremotedirectory-new"),
                               recursive=True,
                               storage_id=storage_id)
     if storages[storage_id]["type"] == "local" and "basedir" not in storages[storage_id]:
-        # access to absolute path for local storage without basedir means absolute path... this won't work
+        # access to absolute path for local storage without basedir means absolute path... this
+        # won't work
         with pytest.raises(Exception):
             storage_client.push(os.path.join(corpus_dir, "train", "europarl-v7.de-en.10K.tok.de"),
-                                os.path.join("/myremotedirectory-new", "test-new", "copy-europarl-v7.de-en.10K.tok.de"),
+                                os.path.join("/myremotedirectory-new", "test-new",
+                                             "copy-europarl-v7.de-en.10K.tok.de"),
                                 storage_id=storage_id)
         storage_client.push(os.path.join(corpus_dir, "train", "europarl-v7.de-en.10K.tok.de"),
-                            os.path.join("myremotedirectory-new", "test-new", "copy-europarl-v7.de-en.10K.tok.de"),
+                            os.path.join("myremotedirectory-new", "test-new",
+                                         "copy-europarl-v7.de-en.10K.tok.de"),
                             storage_id=storage_id)
     else:
         storage_client.push(os.path.join(corpus_dir, "train", "europarl-v7.de-en.10K.tok.de"),
-                            os.path.join("/myremotedirectory-new", "test-new", "copy-europarl-v7.de-en.10K.tok.de"),
+                            os.path.join("/myremotedirectory-new", "test-new",
+                                         "copy-europarl-v7.de-en.10K.tok.de"),
                             storage_id=storage_id)
     # renaming a file
-    storage_client.rename(os.path.join("myremotedirectory", "test", "copy-europarl-v7.de-en.10K.tok.de"),
-                          os.path.join("myremotedirectory", "test", "copy2-europarl-v7.de-en.10K.tok.de"),
-                          storage_id=storage_id)
+    storage_client.rename(
+        os.path.join("myremotedirectory", "test", "copy-europarl-v7.de-en.10K.tok.de"),
+        os.path.join("myremotedirectory", "test", "copy2-europarl-v7.de-en.10K.tok.de"),
+        storage_id=storage_id)
     # pushing a full directory
     storage_client.push(os.path.join(corpus_dir, "vocab"),
                         os.path.join("myremotedirectory", "vocab"),
@@ -238,7 +247,7 @@ def test_storages(request, tmpdir, storages, storage_id):
         size += len(chunk)
         nchunk += 1
     assert size == len(en_vocab)
-    assert nchunk >= int(math.ceil(len(en_vocab)/100.))
+    assert nchunk >= int(math.ceil(len(en_vocab) / 100.))
     # deleting a file
     storage_client.delete(os.path.join("myremotedirectory", "vocab-2", "en-vocab.txt"),
                           storage_id=storage_id)
@@ -279,6 +288,7 @@ def test_storages(request, tmpdir, storages, storage_id):
     # checking directory is not there anymore
     assert not storage_client.exists(os.path.join("myremotedirectory"),
                                      storage_id=storage_id)
+
 
 def test_is_managed_path():
     config = {"s3_models": {}, "s3_test": {}, "launcher": {}}

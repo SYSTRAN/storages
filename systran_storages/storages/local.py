@@ -9,6 +9,7 @@ from systran_storages.storages import Storage
 
 LOGGER = logging.getLogger(__name__)
 
+
 class LocalStorage(Storage):
     """Storage using the local filesystem."""
 
@@ -18,7 +19,8 @@ class LocalStorage(Storage):
 
     def _get_file_safe(self, remote_path, local_path):
         with tempfile.NamedTemporaryFile(delete=False) as tmpfile:
-            LOGGER.debug('Copy remote_path %s to local_path %s via %s', remote_path, local_path, tmpfile.name)
+            LOGGER.debug('Copy remote_path %s to local_path %s via %s', remote_path, local_path,
+                         tmpfile.name)
             tmpfile.close()
             shutil.copy2(remote_path, tmpfile.name)
             shutil.move(tmpfile.name, local_path)
@@ -28,8 +30,8 @@ class LocalStorage(Storage):
             return False
         stat_remote = os.stat(remote_path)
         stat_local = os.stat(local_path)
-        return stat_remote.st_mtime == stat_local.st_mtime\
-            and stat_remote.st_size == stat_local.st_size
+        return stat_remote.st_mtime == stat_local.st_mtime \
+               and stat_remote.st_size == stat_local.st_size
 
     def stream(self, remote_path, buffer_size=1024):
         def generate():
@@ -37,6 +39,7 @@ class LocalStorage(Storage):
             with open(remote_path, "rb") as f:
                 for chunk in iter(lambda: f.read(buffer_size), b''):
                     yield chunk
+
         return generate()
 
     def push_file(self, local_path, remote_path):
@@ -83,7 +86,7 @@ class LocalStorage(Storage):
                     if recursive:
                         getfiles_rec(fullpath)
                     else:
-                        listfile[rel_fullpath+'/'] = {'is_dir': True}
+                        listfile[rel_fullpath + '/'] = {'is_dir': True}
                 else:
                     if os.path.isfile(fullpath):
                         stat = os.stat(fullpath)

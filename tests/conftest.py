@@ -1,6 +1,6 @@
-import pytest
-import six
 import json
+
+import pytest
 
 
 def pytest_generate_tests(metafunc):

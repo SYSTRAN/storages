@@ -1,14 +1,13 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-from systran_storages import StorageClient
-
 import argparse
 import json
-import six
 import os
 import logging
 from datetime import datetime
+
+from systran_storages import StorageClient
 
 
 def resolvedpath(path):
@@ -16,6 +15,7 @@ def resolvedpath(path):
     if not len(fields) == 2 or not fields[1].startswith('/'):
         raise argparse.ArgumentError("incorrect storage path: %s" % path)
     return path
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -34,7 +34,8 @@ def main():
 
     parser_get = subparsers.add_parser('get', help='download a file or directory')
     parser_get.add_argument('storage', type=resolvedpath,
-                            help='path to file or directory to download, directory must ends with /')
+                            help='path to file or directory to download, '
+                                 'directory must ends with /')
     parser_get.add_argument('local', type=str, help='local path')
 
     parser_get = subparsers.add_parser('push', help='upload a file or directory')
@@ -78,6 +79,7 @@ def main():
         client.push(args.local, args.storage)
     elif args.cmd == "stat":
         print(client.stat(args.storage))
+
 
 if __name__ == "__main__":
     main()
