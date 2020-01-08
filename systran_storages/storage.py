@@ -7,6 +7,7 @@ from systran_storages import storages
 
 LOGGER = logging.getLogger(__name__)
 
+
 class StorageClient(object):
     """Client to get and push files to a storage."""
 
@@ -85,7 +86,8 @@ class StorageClient(object):
                         storage_id,
                         basedir=config.get("basedir"))
                 else:
-                    raise ValueError('unsupported storage type %s for %s' % (config['type'], storage_id))
+                    raise ValueError(
+                        'unsupported storage type %s for %s' % (config['type'], storage_id))
                 self._storages[storage_id] = client
             else:
                 client = self._storages[storage_id]
@@ -171,8 +173,9 @@ class StorageClient(object):
             remote_path = remote_path[:-1]
 
         full_path = remote_path + "/" + local_path + "/"
-        if self.exists(full_path, storage_id) :
-            raise ValueError("the folder '%s' already exists in the storage '%s'." % (full_path,storage_id))
+        if self.exists(full_path, storage_id):
+            raise ValueError(
+                "the folder '%s' already exists in the storage '%s'." % (full_path, storage_id))
 
         client.mkdir(full_path)
 
