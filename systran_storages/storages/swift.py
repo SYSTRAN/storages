@@ -4,11 +4,13 @@ import os
 import tempfile
 import shutil
 import logging
-import six
 from datetime import datetime
+
+from swiftclient.service import SwiftService, SwiftUploadObject, SwiftCopyObject
+import six
+
 from systran_storages.storages.utils import datetime_to_timestamp
 from systran_storages.storages import Storage
-from swiftclient.service import SwiftService, SwiftError, SwiftUploadObject, SwiftCopyObject
 
 logging.getLogger("requests").setLevel(logging.CRITICAL)
 logging.getLogger("swiftclient").setLevel(logging.CRITICAL)
@@ -86,9 +88,11 @@ class SwiftStorage(Storage):
         for r in results:
             has_results = True
             if not r["success"]:
-                raise RuntimeError("Cannot push file [%s]>[%s]: %s" % (local_path, remote_path, r["error"]))
+                raise RuntimeError("Cannot push file [%s]>[%s]: %s" % (local_path, remote_path,
+                                                                       r["error"]))
         if not has_results:
-            raise RuntimeError("Cannot push file [%s]>[%s]: %s" % (local_path, remote_path, "NO RESULTS"))
+            raise RuntimeError("Cannot push file [%s]>[%s]: %s" % (local_path, remote_path,
+                                                                   "NO RESULTS"))
 
     def stream(self, remote_path, buffer_size=1024):
         def generate():
@@ -128,7 +132,8 @@ class SwiftStorage(Storage):
                         lsdir[item["subdir"]] = {'is_dir': True}
                     else:
                         path = item["name"]
-                        last_modified = datetime.strptime(item["last_modified"], '%Y-%m-%dT%H:%M:%S.%f')
+                        last_modified = datetime.strptime(item["last_modified"],
+                                                          '%Y-%m-%dT%H:%M:%S.%f')
                         lsdir[path] = {'size': item["bytes"],
                                        'last_modified': datetime_to_timestamp(last_modified)}
         return lsdir
