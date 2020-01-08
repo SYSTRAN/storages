@@ -4,15 +4,17 @@ import os
 import io
 from stat import S_ISDIR
 from socket import timeout as SocketTimeout
-import paramiko
-import scp
 import tempfile
 import shutil
 import logging
 
+import paramiko
+import scp
+
 from systran_storages.storages import Storage
 
 LOGGER = logging.getLogger(__name__)
+
 
 class RemoteStorage(Storage):
     """Storage on a remote SSH server.
@@ -144,6 +146,7 @@ class RemoteStorage(Storage):
                         if msg and msg[0:1] != b'\x00':
                             self._closeSCPClient()
                             raise scp.SCPException(scp.asunicode(msg[1:]))
+
                     return generate()
                 except SocketTimeout:
                     channel.close()
@@ -170,7 +173,8 @@ class RemoteStorage(Storage):
         def getfiles_rec(path):
             if is_file:
                 file_stat = client.stat(path)
-                listfile[self._external_path(path)] = {'size': file_stat.st_size, 'last_modified': file_stat.st_mtime}
+                listfile[self._external_path(path)] = {'size': file_stat.st_size,
+                                                       'last_modified': file_stat.st_mtime}
             else:
                 for f in client.listdir_attr(path=path):
                     fullpath = os.path.join(path, f.filename)
@@ -178,7 +182,7 @@ class RemoteStorage(Storage):
                         if recursive:
                             getfiles_rec(fullpath)
                         else:
-                            listfile[self._external_path(fullpath)+'/'] = {'is_dir': True}
+                            listfile[self._external_path(fullpath) + '/'] = {'is_dir': True}
                     else:
                         listfile[self._external_path(fullpath)] = {'size': f.st_size,
                                                                    'last_modified': f.st_mtime}

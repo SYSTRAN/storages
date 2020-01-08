@@ -10,6 +10,7 @@ from systran_storages.storages import Storage
 
 LOGGER = logging.getLogger(__name__)
 
+
 class HTTPStorage(Storage):
     """Simple http file-only storage."""
 
@@ -23,7 +24,8 @@ class HTTPStorage(Storage):
         with tempfile.NamedTemporaryFile(delete=False) as tmpfile:
             res = requests.get(self._pattern_get % remote_path)
             if res.status_code != 200:
-                raise RuntimeError('cannot not get %s (response code %d)' % (remote_path, res.status_code))
+                raise RuntimeError(
+                    'cannot not get %s (response code %d)' % (remote_path, res.status_code))
             tmpfile.write(res.content)
             shutil.move(tmpfile.name, local_path)
 
@@ -34,7 +36,8 @@ class HTTPStorage(Storage):
     def stream(self, remote_path, buffer_size=1024):
         res = requests.get(self._pattern_get % remote_path, stream=True)
         if res.status_code != 200:
-            raise RuntimeError('cannot not get %s (response code %d)' % (remote_path, res.status_code))
+            raise RuntimeError(
+                'cannot not get %s (response code %d)' % (remote_path, res.status_code))
 
         def generate():
             for chunk in res.iter_content(chunk_size=buffer_size, decode_unicode=None):
