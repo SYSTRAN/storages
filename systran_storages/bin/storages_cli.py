@@ -101,6 +101,8 @@ def main():
             client.get_directory(args.storage, args.local)
         else:
             client.get_file(args.storage, args.local)
+    elif args.cmd == "push":
+        client.push(args.local, args.storage, args.format)
     elif args.cmd == "stat":
         print(client.stat(args.storage))
 

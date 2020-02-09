@@ -57,6 +57,25 @@ class CMStorages(Storage):
 
         return generate()
 
+    def push_file(self, local_path, remote_path, format_path):
+        if self.hostURL is None:
+            raise ValueError('http storage %s can not handle hostURL' % self._storage_id)
+
+        if remote_path == "":
+            remote_path = '/' + local_path.split("/")[-1]
+
+        if not remote_path.startswith('/'):
+            remote_path = "/" + remote_path
+
+        parameters = {
+            'accountId': (None, self.accountID),
+            'filename': (None, remote_path),
+            'format': (None, format_path),
+            'corpus': (local_path, open(local_path, 'rb')),
+        }
+
+        requests.post(f'{self.hostURL}/corpus/import', files=parameters)
+
     def listdir(self, remote_path, recursive=False, is_file=False):
         if self.hostURL is None:
             raise ValueError('http storage %s can not handle hostURL' % self._storage_id)
