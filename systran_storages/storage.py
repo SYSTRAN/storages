@@ -81,6 +81,12 @@ class StorageClient(object):
                         config['get_pattern'],
                         pattern_push=config.get('post_pattern'),
                         pattern_list=config.get('list_pattern'))
+                elif config['type'] == 'corpus':
+                    client = storages.CMStorages(
+                        storage_id,
+                        config.get('hostURL'),
+                        accountID=config.get('accountID'),
+                        root_folder=config.get('folder'))
                 elif config['type'] == 'local':
                     client = storages.LocalStorage(
                         storage_id,
@@ -150,7 +156,7 @@ class StorageClient(object):
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
         return client.stream(remote_path, buffer_size)
 
-    def push(self, local_path, remote_path, storage_id=None):
+    def push(self, local_path, remote_path, format_path, storage_id=None):
         """Pushes a local_path file or directory to storage."""
         if not os.path.exists(local_path):
             raise RuntimeError('%s not found' % local_path)
@@ -158,13 +164,14 @@ class StorageClient(object):
             return
         LOGGER.info('Uploading %s to %s', local_path, remote_path)
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
-        client.push(local_path, remote_path)
+        client.push(local_path, remote_path, format_path)
 
     def mkdir(self, local_path, remote_path, storage_id=None):
         """Pushes a local_path file or directory to storage."""
         LOGGER.info('mkdir %s to %s', local_path, remote_path)
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
-        # Remove antislash from first and last character
+        # Remove antislash from first and lasf
+        # t character
         if local_path.startswith("/"):
             local_path = local_path[1:]
         if local_path.endswith("/"):

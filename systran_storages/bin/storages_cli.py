@@ -16,6 +16,21 @@ def resolvedpath(path):
     return path
 
 
+def resolvedjson(path):
+    with open(path) as jsonf:
+        content = jsonf.read()
+        data = json.loads(content)
+    if 'filter' in data:
+        filter = data['filter']
+    return filter
+
+
+def checkformat(format):
+    if format not in ['application/x-tmx+xml', 'text/bitext']:
+        raise argparse.ArgumentError("incorrect format: %s" % format)
+    return format
+
+
 def main():
     parser = argparse.ArgumentParser()
 
@@ -40,9 +55,22 @@ def main():
     parser_get.add_argument('local', type=str, help='local path to file or directory to upload')
     parser_get.add_argument('storage', type=resolvedpath,
                             help='remote path')
+    parser_get.add_argument('format', type=checkformat,
+                            help='Format of the corpus (application/x-tmx+xml, text/bitext)')
 
     parser_stat = subparsers.add_parser('stat', help='returns stat on a remote file/directory')
     parser_stat.add_argument('storage', type=resolvedpath, help='remote path')
+
+    parser_search = subparsers.add_parser('search', help='list corpus segments identified '
+                                                         'by corpus id')
+    parser_search.add_argument('storage', type=resolvedpath, help='remote path')
+    parser_search.add_argument('id', help='remote id')
+    parser_search.add_argument('search_query', type=resolvedjson,
+                               help='query text for search')
+    parser_search.add_argument('skip', default=0,
+                               help='number of segments skip (default 0)')
+    parser_search.add_argument('limit', default=0,
+                               help='number of segments returned (default 0 meaning all)')
 
     args = parser.parse_args()
     if args.info:
@@ -64,7 +92,7 @@ def main():
                 print("dir", k)
             else:
                 date = datetime.fromtimestamp(listdir[k]["last_modified"])
-                print("   ", "%10d" % listdir[k]["size"], date.strftime("%Y-%m-%dT%H:%M:%S"), k)
+                print("   ", "%10d" % listdir[k]["entries"], date.strftime("%Y-%m-%dT%H:%M:%S"), k)
     elif args.cmd == "get":
         directory = args.storage.endswith('/')
         if directory:
@@ -73,8 +101,6 @@ def main():
             client.get_directory(args.storage, args.local)
         else:
             client.get_file(args.storage, args.local)
-    elif args.cmd == "push":
-        client.push(args.local, args.storage)
     elif args.cmd == "stat":
         print(client.stat(args.storage))
 
