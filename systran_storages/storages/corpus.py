@@ -80,6 +80,9 @@ class CMStorages(Storage):
         if self.hostURL is None:
             raise ValueError('http storage %s can not handle hostURL' % self._storage_id)
 
+        if not remote_path.endswith('/'):
+            remote_path = remote_path + "/"
+
         listdir = {}
 
         list_objects = requests.get(self.hostURL + "/corpus/list?accountId=" + self.accountID)
@@ -90,10 +93,6 @@ class CMStorages(Storage):
         if 'files' in list_objects:
             for key in list_objects['files']:
                 if remote_path in key['filename']:
-                    if remote_path == "":
-                        remote_path = "/"
-                    if not remote_path.startswith('/'):
-                        remote_path = '/' + remote_path
                     date_time = datetime.strptime(key["createdAt"].strip(), "%a %b %d %H:%M:%S %Y")
                     basename = os.path.basename(key["filename"])
                     folder = os.path.dirname(key['filename'])
@@ -105,11 +104,11 @@ class CMStorages(Storage):
                                          'sourceLanguage': key['sourceLanguage'],
                                          'targetLanguages': key['targetLanguages'],
                                          'last_modified': datetime_to_timestamp(date_time)}
-                    if remote_path + "/" in folder or remote_path == '/':
+                    if remote_path in folder or remote_path == '/':
                         sub_dir = folder.split(remote_path)[1]
                         internal_sub_dir = self._internal_path(sub_dir)
                         if len(internal_sub_dir) > 0:
-                            listdir[internal_sub_dir] = {"is_dir": True}
+                            listdir[os.path.join(remote_path, internal_sub_dir)] = {"is_dir": True}
         return listdir
 
     def _delete_single(self, remote_path, isdir):
@@ -121,19 +120,43 @@ class CMStorages(Storage):
     def mkdir(self, remote_path):
         pass
 
+    def segment_list(self, remote_id):
+        if self.hostURL is None:
+            raise ValueError('http storage %s can not handle hostURL' % self._storage_id)
+        params = {
+            'accountId': (None, self.accountID),
+            'id': (None, remote_id)
+        }
+        response = requests.post(f'{self.hostURL}/corpus/segment/list', files=params)
+        list_segment = response.json()
+        return list_segment
+
+    def search(self, remote_id, search_query, nb_skip, nb_returns):
+        skip = int(nb_skip)
+        limit = int(nb_returns)
+        list_segment = self.segment_list(remote_id)['segments']
+        matched_source = [x for x in list_segment if
+                          re.search(search_query["source"]['keyword'], x['seg'])]
+        matched_target = [x for x in matched_source if
+                          re.search(search_query["target"]['keyword'], x['tgt']['seg'])]
+        result = matched_target[skip:limit]
+        return result, len(matched_target)
+
     def isdir(self, remote_path):
         if remote_path.endswith('/'):
             return True
         return False
 
     def exists(self, remote_path):
+        if not remote_path.startswith('/'):
+            remote_path += '/'
         params = {
             'accountId': (None, self.accountID),
             'filename': (None, remote_path),
         }
 
         response = requests.post(f'{self.hostURL}/corpus/exists', files=params)
-        if 'true' in response.text:
+        if remote_path == '' or remote_path.endswith('/') or 'true' in response.text:
             return True
         return False
 

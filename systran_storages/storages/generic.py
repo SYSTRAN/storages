@@ -255,3 +255,9 @@ class Storage(object):
         """convert the internal path to the external user path
         """
         return path
+
+    @abc.abstractmethod
+    def search(self, remote_id, request_search, nb_skip, nb_returns):
+        """list corpus segments identified by corpus id
+        """
+        raise NotImplementedError()

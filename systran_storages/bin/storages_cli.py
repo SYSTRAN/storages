@@ -105,6 +105,8 @@ def main():
         client.push(args.local, args.storage, args.format)
     elif args.cmd == "stat":
         print(client.stat(args.storage))
+    elif args.cmd == "search":
+        print(client.search(args.storage, args.id, args.search_query, args.skip, args.limit))
 
 
 if __name__ == "__main__":
