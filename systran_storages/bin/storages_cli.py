@@ -76,6 +76,11 @@ def main():
     parser_search.add_argument('limit', default=0,
                                help='number of segments returned (default 0 meaning all)')
 
+    parser_search = subparsers.add_parser('seg_delete', help='Delete segments identified by id')
+    parser_search.add_argument('storage', type=resolvedpath, help='remote path')
+    parser_search.add_argument('corpus_id', help='corpus id')
+    parser_search.add_argument('ids', help='list segment id')
+
     args = parser.parse_args()
     if args.info:
         logging.basicConfig(level=logging.INFO)
@@ -113,6 +118,8 @@ def main():
         print(client.stat(args.storage))
     elif args.cmd == "search":
         print(client.search(args.storage, args.id, args.search_query, args.skip, args.limit))
+    elif args.cmd == "seg_delete":
+        print(client.seg_delete(args.storage, args.corpus_id, args.ids))
 
 
 if __name__ == "__main__":

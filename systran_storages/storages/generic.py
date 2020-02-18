@@ -311,3 +311,13 @@ class Storage(object):
         """list corpus segments identified by corpus id
         """
         raise NotImplementedError()
+
+    def seg_delete(self, corpus_id, seg_ids):
+        """Delete segments identified by id
+        """
+        raise NotImplementedError()
+
+    def seg_modify(self, corpus_id, seg_id, tgt_id, tgt_seg, src_seg):
+        """Modify segments identified by id
+        """
+        raise NotImplementedError()

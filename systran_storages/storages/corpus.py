@@ -121,6 +121,40 @@ class CMStorages(Storage):
             row.update({"corpusId": remote_ids[0]})
         return result, len(matched_target)
 
+    def seg_delete(self, corpus_id, list_seg_id):
+        deleted_seg = 0
+        for seg_id in list_seg_id:
+            params = {
+                'accountId': self.accountID,
+                'id': corpus_id,
+                'segId': seg_id,
+            }
+            response = requests.post(f'{self.hostURL}/corpus/segment/delete', data=params)
+            if response.status_code == 200:
+                deleted_seg += response.json()["segmentDeleted"]
+            else:
+                raise ValueError(
+                    "Cannot delete '%s' in '%s'." % (seg_id, corpus_id))
+        return deleted_seg
+
+    def seg_modify(self, corpus_id, seg_id, tgt_id, tgt_seg, src_seg):
+        params = {
+            'accountId': self.accountID,
+            'id': corpus_id,
+            'segId': seg_id,
+            'tgtId': tgt_id,
+            'tgtSeg': tgt_seg,
+            'srcSeg': src_seg,
+        }
+
+        response = requests.post(f'{self.hostURL}/corpus/segment/modify', data=params)
+        if response.status_code == 200:
+            status = True if response.json()["status"] == 'ok' else False
+        else:
+            raise ValueError(
+                "Cannot modify segment '%s' in '%s'." % (seg_id, corpus_id))
+        return status
+
     def isdir(self, remote_path):
         if remote_path.endswith('/'):
             return True

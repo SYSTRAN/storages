@@ -220,6 +220,16 @@ class StorageClient(object):
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
         return client.search(remote_ids, search_query, nb_skip, nb_returns)
 
+    def seg_delete(self, remote_path, corpus_id, seg_ids, storage_id=None):
+        """List corpus segments from a storage."""
+        client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
+        return client.seg_delete(corpus_id, seg_ids)
+
+    def seg_modify(self, remote_path, corpus_id, seg_id, tgt_id, tgt_seg, src_seg, storage_id=None):
+        """List corpus segments from a storage."""
+        client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
+        return client.seg_modify(corpus_id, seg_id, tgt_id, tgt_seg, src_seg)
+
     def rename(self, old_remote_path, new_remote_path, storage_id=None):
         """Renames a file or directory on storage from old_remote_path to new_remote_path."""
         client_old, old_remote_path = self._get_storage(old_remote_path, storage_id=storage_id)
