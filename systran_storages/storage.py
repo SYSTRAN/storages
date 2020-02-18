@@ -85,8 +85,7 @@ class StorageClient(object):
                     client = storages.CMStorages(
                         storage_id,
                         config.get('hostURL'),
-                        accountID=config.get('accountID'),
-                        root_folder=config.get('folder'))
+                        accountID=config.get('accountID'))
                 elif config['type'] == 'local':
                     client = storages.LocalStorage(
                         storage_id,
@@ -156,7 +155,7 @@ class StorageClient(object):
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
         return client.stream(remote_path, buffer_size)
 
-    def push(self, local_path, remote_path, format_path, storage_id=None):
+    def push(self, local_path, remote_path, storage_id=None):
         """Pushes a local_path file or directory to storage."""
         if not os.path.exists(local_path):
             raise RuntimeError('%s not found' % local_path)
@@ -164,7 +163,7 @@ class StorageClient(object):
             return
         LOGGER.info('Uploading %s to %s', local_path, remote_path)
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
-        client.push(local_path, remote_path, format_path)
+        client.push(local_path, remote_path)
 
     def mkdir(self, local_path, remote_path, storage_id=None):
         """Pushes a local_path file or directory to storage."""
@@ -211,10 +210,15 @@ class StorageClient(object):
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
         return client.delete(remote_path, recursive)
 
-    def search(self, remote_path, remote_id, search_query, nb_skip, nb_returns, storage_id=None):
+    def delete_corpus_manager(self, remote_path, corpus_id, recursive=False, storage_id=None):
         """Deletes a file or directory from a storage."""
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
-        return client.search(remote_id, search_query, nb_skip, nb_returns)
+        return client.delete_corpus_manager(remote_path, corpus_id, recursive)
+
+    def search(self, remote_path, remote_ids, search_query, nb_skip, nb_returns, storage_id=None):
+        """List corpus segments from a storage."""
+        client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
+        return client.search(remote_ids, search_query, nb_skip, nb_returns)
 
     def rename(self, old_remote_path, new_remote_path, storage_id=None):
         """Renames a file or directory on storage from old_remote_path to new_remote_path."""

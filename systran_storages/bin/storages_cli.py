@@ -54,12 +54,16 @@ def main():
     parser_get = subparsers.add_parser('push', help='upload a file or directory')
     parser_get.add_argument('local', type=str, help='local path to file or directory to upload')
     parser_get.add_argument('storage', type=resolvedpath,
-                            help='remote path')
-    parser_get.add_argument('format', type=checkformat,
-                            help='Format of the corpus (application/x-tmx+xml, text/bitext)')
+                            help='path to file or directory to download, directory must ends with /')
+
+    parser_get = subparsers.add_parser('delete', help='delete a corpus')
+    parser_get.add_argument('storage', type=resolvedpath,
+                            help='path to file or directory to download, directory must ends with /')
+    parser_get.add_argument('corpusId', type=str, help='corpus id')
 
     parser_stat = subparsers.add_parser('stat', help='returns stat on a remote file/directory')
-    parser_stat.add_argument('storage', type=resolvedpath, help='remote path')
+    parser_stat.add_argument('storage', type=resolvedpath,
+                             help='path to file or directory to download, directory must ends with /')
 
     parser_search = subparsers.add_parser('search', help='list corpus segments identified '
                                                          'by corpus id')
@@ -102,7 +106,9 @@ def main():
         else:
             client.get_file(args.storage, args.local)
     elif args.cmd == "push":
-        client.push(args.local, args.storage, args.format)
+        client.push(args.local, args.storage)
+    elif args.cmd == "delete":
+        client.delete_corpus_manager(args.storage, args.corpusId)
     elif args.cmd == "stat":
         print(client.stat(args.storage))
     elif args.cmd == "search":
