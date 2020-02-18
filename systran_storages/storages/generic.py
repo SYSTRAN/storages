@@ -321,3 +321,8 @@ class Storage(object):
         """Modify segments identified by id
         """
         raise NotImplementedError()
+
+    def seg_add(self, corpus_id, segments):
+        """Delete segments identified by id
+        """
+        raise NotImplementedError()

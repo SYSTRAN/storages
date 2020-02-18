@@ -120,6 +120,8 @@ def main():
         print(client.search(args.storage, args.id, args.search_query, args.skip, args.limit))
     elif args.cmd == "seg_delete":
         print(client.seg_delete(args.storage, args.corpus_id, args.ids))
+    elif args.cmd == "seg_add":
+        print(client.seg_add(args.storage, args.corpus_id, args.ids))
 
 
 if __name__ == "__main__":

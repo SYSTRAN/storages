@@ -155,6 +155,25 @@ class CMStorages(Storage):
                 "Cannot modify segment '%s' in '%s'." % (seg_id, corpus_id))
         return status
 
+    def seg_add(self, corpus_id, segments):
+        data = {
+            'accountId': self.accountID,
+            'id': corpus_id,
+            'segments': segments,
+        }
+        data = json.dumps(data)
+        with tempfile.NamedTemporaryFile(delete=False, mode="w") as tmpfile:
+            tmpfile.write(data)
+
+        proc = os.popen(f"http {self.hostURL}/corpus/segment/add < tmp.json")
+
+        tmp = json.loads(proc.read())
+        if tmp:
+            return tmp
+        else:
+            raise ValueError(
+                "Cannot add segment '%s' in '%s'." % (segments, corpus_id))
+
     def isdir(self, remote_path):
         if remote_path.endswith('/'):
             return True
