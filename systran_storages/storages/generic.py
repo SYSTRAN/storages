@@ -142,15 +142,27 @@ class Storage(object):
         else:
             self._sync_file(remote_path, local_path)
 
-    @abc.abstractmethod
+    # @abc.abstractmethod
     def stream(self, remote_path, buffer_size=1024):
         """return a generator on a remote file
         """
         raise NotImplementedError()
 
-    @abc.abstractmethod
+    # @abc.abstractmethod
+    def stream_corpus_manager(self, remote_path, remote_id, remote_format, buffer_size=1024):
+        """return a generator on a remote file for Corpus Manager storage
+        """
+        raise NotImplementedError()
+
+    # @abc.abstractmethod
     def push_file(self, local_path, remote_path):
         """Push a local file on a remote storage path
+        """
+        raise NotImplementedError()
+
+    # @abc.abstractmethod
+    def push_file_corpus_manager(self, local_path, remote_path, corpus_id=None):
+        """Push a local file on Corpus Manager storage
         """
         raise NotImplementedError()
 

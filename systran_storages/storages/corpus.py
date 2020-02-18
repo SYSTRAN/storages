@@ -36,6 +36,58 @@ class CMStorages(Storage):
         # not optimized for http download yet
         return False
 
+    def stream_corpus_manager(self, remote_path, remote_id, remote_format, buffer_size=1024):
+        params = (
+            ('accountId', self.accountID),
+            ('id', remote_id),
+            ('format', remote_format),
+        )
+
+        response = requests.get(f'{self.hostURL}/corpus/export', params=params)
+        if response.status_code != 200:
+            raise RuntimeError(
+                'cannot get %s (response code %d)' % (remote_path, response.status_code))
+
+        def generate():
+            for chunk in response.iter_content(chunk_size=buffer_size, decode_unicode=None):
+                yield chunk
+
+        return generate()
+
+    def push_file_corpus_manager(self, local_path, remote_path, corpus_id=None):
+        if self.hostURL is None:
+            raise ValueError('http storage %s can not handle hostURL' % self._storage_id)
+
+        if local_path.endswith(".txt"):
+            format_path = 'text/bitext'
+        elif local_path.endswith(".tmx"):
+            format_path = 'application/x-tmx+xml'
+        else:
+            raise ValueError(
+                'cannot push %s, only support format of the corpus (application/x-tmx+xml, '
+                'text/bitext)' % local_path)
+
+        if remote_path == "":
+            remote_path = '/' + local_path.split("/")[-1]
+
+        if not remote_path.startswith('/'):
+            remote_path = "/" + remote_path
+
+        parameters = {
+            'accountId': self.accountID,
+            'filename': remote_path,
+            'format': format_path,
+            'id': corpus_id,
+            'corpus': (local_path, open(local_path, 'rb')),
+        }
+
+        res = requests.post(f'{self.hostURL}/corpus/import', data=parameters)
+
+        if res.status_code != 200:
+            raise RuntimeError(
+                'cannot push %s (response code %d)' % (remote_path, res.status_code))
+        return True
+
     def listdir(self, remote_path, recursive=False, is_file=False):
         if self.hostURL is None:
             raise ValueError('http storage %s can not handle hostURL' % self._storage_id)

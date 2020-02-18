@@ -65,6 +65,13 @@ def main():
     parser_stat.add_argument('storage', type=resolvedpath,
                              help='path to file or directory to download, directory must ends with /')
 
+    parser_get = subparsers.add_parser('download', help='Export a corpus in TMX(default) or biText')
+    parser_get.add_argument('storage', type=resolvedpath,
+                            help='path to file or directory to download, directory must ends with /')
+    parser_get.add_argument('corpusId', type=str, help='corpus id')
+    parser_get.add_argument('format', type=checkformat,
+                            help='Format of the corpus (application/x-tmx+xml, text/bitext)')
+
     parser_search = subparsers.add_parser('search', help='list corpus segments identified '
                                                          'by corpus id')
     parser_search.add_argument('storage', type=resolvedpath, help='remote path')
@@ -116,6 +123,8 @@ def main():
         client.delete_corpus_manager(args.storage, args.corpusId)
     elif args.cmd == "stat":
         print(client.stat(args.storage))
+    elif args.cmd == "download":
+        client.stream_corpus_manager(args.storage, args.corpusId, args.format)
     elif args.cmd == "search":
         print(client.search(args.storage, args.id, args.search_query, args.skip, args.limit))
     elif args.cmd == "seg_delete":
