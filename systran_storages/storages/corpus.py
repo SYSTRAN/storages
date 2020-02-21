@@ -25,11 +25,33 @@ class CMStorages(Storage):
 
     def _get_file_safe(self, remote_path, local_path):
         with tempfile.NamedTemporaryFile(delete=False) as tmpfile:
-            res = requests.get(self._pattern_get % remote_path)
-            if res.status_code != 200:
+            corpus_id = ""
+            format_corpus = ""
+            data = {
+                'prefix': remote_path,
+                'accountId': self.accountID
+            }
+
+            response = requests.post(f'{self.hostURL}/corpus/list', data=data)
+            list_objects = response.json()
+            if "files" in list_objects:
+                for key in list_objects["files"]:
+                    if remote_path == key.get("filename"):
+                        corpus_id = key.get("id")
+                        format_corpus = key.get("format")
+
+            params = (
+                ('accountId', self.accountID),
+                ('id', corpus_id),
+                ('format', format_corpus),
+            )
+
+            response = requests.get(f'{self.hostURL}/corpus/export', params=params)
+
+            if response.status_code != 200:
                 raise RuntimeError(
-                    'cannot not get %s (response code %d)' % (remote_path, res.status_code))
-            tmpfile.write(res.content)
+                    'cannot not get %s (response code %d)' % (remote_path, response.status_code))
+            tmpfile.write(response.content)
             shutil.move(tmpfile.name, local_path)
 
     def _check_existing_file(self, remote_path, local_path):
@@ -37,6 +59,8 @@ class CMStorages(Storage):
         return False
 
     def stream_corpus_manager(self, remote_path, remote_id, remote_format, buffer_size=1024):
+        if remote_format == "" or remote_format is None:
+            remote_format = "text/bitext"
         params = (
             ('accountId', self.accountID),
             ('id', remote_id),
@@ -54,7 +78,7 @@ class CMStorages(Storage):
 
         return generate()
 
-    def push_file_corpus_manager(self, local_path, remote_path, corpus_id=None):
+    def push_file(self, local_path, remote_path):
         if self.hostURL is None:
             raise ValueError('http storage %s can not handle hostURL' % self._storage_id)
 
@@ -69,36 +93,38 @@ class CMStorages(Storage):
 
         if remote_path == "":
             remote_path = '/' + local_path.split("/")[-1]
+        remote_path = self._internal_path(remote_path)
+        shutil.move(local_path, remote_path)
 
-        if not remote_path.startswith('/'):
-            remote_path = "/" + remote_path
-
-        parameters = {
-            'accountId': self.accountID,
-            'filename': remote_path,
-            'format': format_path,
-            'id': corpus_id,
-            'corpus': (local_path, open(local_path, 'rb')),
+        files = {
+            'filename': (None, remote_path),
+            'accountId': (None, self.accountID),
+            'format': (None, format_path),
+            'corpus': (remote_path, open(remote_path, 'rb')),
         }
 
-        res = requests.post(f'{self.hostURL}/corpus/import', data=parameters)
+        response = requests.post(f'{self.hostURL}/corpus/import', files=files)
 
-        if res.status_code != 200:
+        if response.status_code == 200:
+            status = True if "id" in response.json() else False
+        else:
             raise RuntimeError(
-                'cannot push %s (response code %d)' % (remote_path, res.status_code))
-        return True
+                'cannot push %s (response code %d)' % (remote_path, response.status_code))
+
+        os.remove(remote_path)
+        return status
 
     def listdir(self, remote_path, recursive=False, is_file=False):
         if self.hostURL is None:
             raise ValueError('http storage %s can not handle hostURL' % self._storage_id)
+
+        listdir = {}
 
         if not remote_path.endswith('/'):
             remote_path = remote_path + "/"
 
         if not remote_path.startswith('/'):
             remote_path = '/' + remote_path
-
-        listdir = {}
 
         list_objects = requests.get(self.hostURL + "/corpus/list?accountId=" + self.accountID)
         list_objects = list_objects.json()
@@ -107,13 +133,13 @@ class CMStorages(Storage):
                 listdir[key['Prefix']] = {'is_dir': True}
         if 'files' in list_objects:
             for key in list_objects['files']:
+                if not key['filename'].startswith('/'):
+                    key['filename'] = '/' + key['filename']
                 if remote_path in key['filename']:
                     date_time = datetime.strptime(key["createdAt"].strip(), "%a %b %d %H:%M:%S %Y")
                     basename = os.path.basename(key["filename"])
                     folder = os.path.dirname(key['filename'])
-                    if not folder.startswith('/'):
-                        folder = "/" + folder
-                    if remote_path + basename == key['filename']:
+                    if os.path.join(remote_path, basename) == key['filename']:
                         listdir[key['filename']] = {'entries': int(key.get('nbSegments')),
                                                     'format': key.get('format'),
                                                     'id': key.get('id'),
@@ -136,26 +162,31 @@ class CMStorages(Storage):
             )
 
             response = requests.get(f'{self.hostURL}/corpus/delete', params=params)
-            if response.status_code != 200:
+            if response.status_code == 200:
+                status = True if response.ok else False
+            else:
                 raise RuntimeError(
                     'cannot delete %s (response code %d)' % response.status_code)
-
-            return True
+            return status
 
     def rename(self, old_remote_path, new_remote_path):
         raise NotImplementedError()
 
     def mkdir(self, remote_path):
-        pass
+        try:
+            if not os.path.exists(remote_path):
+                os.mkdir(remote_path)
+        except OSError as err:
+            return err
 
     def segment_list(self, remote_id):
         if self.hostURL is None:
             raise ValueError('http storage %s can not handle hostURL' % self._storage_id)
         params = {
-            'accountId': self.accountID,
-            'id': remote_id
+            'accountId': (None, self.accountID),
+            'id': (None, remote_id)
         }
-        response = requests.post(f'{self.hostURL}/corpus/segment/list', data=params)
+        response = requests.post(f'{self.hostURL}/corpus/segment/list', files=params)
         list_segment = response.json()
         return list_segment
 
@@ -163,8 +194,11 @@ class CMStorages(Storage):
         skip = int(nb_skip)
         limit = int(nb_returns)
 
-        list_segment = self.segment_list(remote_ids[0])['segments']
-        matched_source = [x for x in list_segment if
+        list_segment = self.segment_list(remote_ids[0])
+        if "error" in list_segment:
+            raise RuntimeError
+        segments = list_segment['segments']
+        matched_source = [x for x in segments if
                           re.search(search_query["source"]['keyword'], x['seg'])]
         matched_target = [x for x in matched_source if
                           re.search(search_query["target"]['keyword'], x['tgt']['seg'])]
@@ -232,18 +266,24 @@ class CMStorages(Storage):
         return False
 
     def exists(self, remote_path):
-        if not remote_path.startswith('/'):
-            remote_path = '/' + remote_path
-        params = {
-            'accountId': self.accountID,
-            'filename': remote_path,
-        }
-
-        if '.' not in remote_path:
+        if remote_path == '':
             return True
         if '.' in remote_path:
+            params = {
+                'accountId': self.accountID,
+                'filename': remote_path,
+            }
             response = requests.post(f'{self.hostURL}/corpus/exists', data=params)
             if "true" in response.text:
+                return True
+        else:
+            data = {
+                'prefix': remote_path,
+                'accountId': self.accountID
+            }
+
+            response = requests.post(f'{self.hostURL}/corpus/list', data=data)
+            if len(response.json().get("files")) > 0:
                 return True
         return False
 

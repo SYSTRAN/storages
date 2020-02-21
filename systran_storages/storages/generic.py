@@ -160,12 +160,6 @@ class Storage(object):
         """
         raise NotImplementedError()
 
-    # @abc.abstractmethod
-    def push_file_corpus_manager(self, local_path, remote_path, corpus_id=None):
-        """Push a local file on Corpus Manager storage
-        """
-        raise NotImplementedError()
-
     def push(self, local_path, remote_path):
         """Push a file or directory on a remote storage
         """
@@ -188,31 +182,6 @@ class Storage(object):
                         push_rec(local_filepath, remote_filepath)
                     else:
                         self.push(local_filepath, remote_filepath)
-
-            push_rec(local_path, remote_path)
-
-    def push_corpus_manager(self, local_path, remote_path, corpus_id=None):
-        """Push a file or directory on Corpus Manager storage
-        """
-        if os.path.isfile(local_path):
-            if remote_path.endswith('/') or self.isdir(remote_path):
-                remote_path = os.path.join(remote_path, os.path.basename(local_path))
-            dirname = os.path.dirname(remote_path)
-            self.mkdir(dirname)
-            LOGGER.info('Uploading file %s to %s', local_path, remote_path)
-            self.push_file_corpus_manager(local_path, remote_path, corpus_id)
-        else:
-            def push_rec(local_path, remote_path):
-                files = os.listdir(local_path)
-                for f in files:
-                    if f.startswith("."):
-                        continue
-                    local_filepath = os.path.join(local_path, f)
-                    remote_filepath = os.path.join(remote_path, f)
-                    if os.path.isdir(local_filepath):
-                        push_rec(local_filepath, remote_filepath)
-                    else:
-                        self.push_file_corpus_manager(local_filepath, remote_filepath, corpus_id)
 
             push_rec(local_path, remote_path)
 
