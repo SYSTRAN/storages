@@ -18,10 +18,11 @@ LOGGER = logging.getLogger(__name__)
 class CMStorages(Storage):
     """Corpus Manager storage."""
 
-    def __init__(self, storage_id, host_url, account_id=None):
+    def __init__(self, storage_id, host_url, resource_type, account_id=None):
         super(CMStorages, self).__init__(storage_id)
         self.host_url = host_url
         self.account_id = account_id
+        self.resource_type = resource_type
 
     def _get_file_safe(self, remote_path, local_path):
         with tempfile.NamedTemporaryFile(delete=False) as tmpfile:
@@ -143,6 +144,7 @@ class CMStorages(Storage):
                         listdir[key['filename']] = {'entries': int(key.get('nbSegments')),
                                                     'format': key.get('format'),
                                                     'id': key.get('id'),
+                                                    'type': self.resource_type,
                                                     'sourceLanguage': key.get('sourceLanguage'),
                                                     'targetLanguages': key.get('targetLanguages'),
                                                     'last_modified': datetime_to_timestamp(

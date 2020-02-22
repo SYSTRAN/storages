@@ -85,7 +85,8 @@ class StorageClient(object):
                     client = storages.CMStorages(
                         storage_id,
                         config.get('host_url'),
-                        account_id=config.get('account_id'))
+                        account_id=config.get('account_id'),
+                        resource_type=config.get('resource_type'))
                 elif config['type'] == 'local':
                     client = storages.LocalStorage(
                         storage_id,
