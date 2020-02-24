@@ -86,7 +86,8 @@ class StorageClient(object):
                         storage_id,
                         config.get('host_url'),
                         account_id=config.get('account_id'),
-                        resource_type=config.get('resource_type'))
+                        resource_type=config.get('resource_type'),
+                        root_folder=config.get('root_folder'))
                 elif config['type'] == 'local':
                     client = storages.LocalStorage(
                         storage_id,
@@ -162,7 +163,7 @@ class StorageClient(object):
         `buffer_size` is the maximal size of each chunk
         """
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
-        return client.stream_corpus_manager(remote_path, remote_id, remote_format, buffer_size)
+        return client.stream_corpus_manager(remote_id, remote_format, buffer_size)
 
     def push(self, local_path, remote_path, storage_id=None):
         """Pushes a local_path file or directory to storage."""
@@ -173,6 +174,16 @@ class StorageClient(object):
         LOGGER.info('Uploading %s to %s', local_path, remote_path)
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
         client.push(local_path, remote_path)
+
+    def push_corpus_manager(self, local_path, remote_path, corpus_id, storage_id=None):
+        """Pushes a local_path file or directory to storage."""
+        if not os.path.exists(local_path):
+            raise RuntimeError('%s not found' % local_path)
+        if local_path == remote_path:
+            return
+        LOGGER.info('Uploading %s to %s', local_path, remote_path)
+        client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
+        client.push_corpus_manager(local_path, remote_path, corpus_id)
 
     def mkdir(self, local_path, remote_path, storage_id=None):
         """Pushes a local_path file or directory to storage."""
@@ -219,10 +230,10 @@ class StorageClient(object):
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
         return client.delete(remote_path, recursive)
 
-    def delete_corpus_manager(self, remote_path, corpus_id, recursive=False, storage_id=None):
+    def delete_corpus_manager(self, remote_path, corpus_id, storage_id=None):
         """Deletes a file or directory from a storage."""
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
-        return client.delete_corpus_manager(remote_path, corpus_id, recursive)
+        return client.delete_corpus_manager(corpus_id)
 
     def search(self, remote_path, remote_ids, search_query, nb_skip, nb_returns, storage_id=None):
         """List corpus segments from a storage."""

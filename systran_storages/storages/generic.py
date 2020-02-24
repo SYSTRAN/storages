@@ -149,7 +149,7 @@ class Storage(object):
         raise NotImplementedError()
 
     # @abc.abstractmethod
-    def stream_corpus_manager(self, remote_path, remote_id, remote_format, buffer_size=1024):
+    def stream_corpus_manager(self, remote_id, remote_format, buffer_size=1024):
         """return a generator on a remote file for Corpus Manager storage
         """
         raise NotImplementedError()
@@ -185,6 +185,11 @@ class Storage(object):
 
             push_rec(local_path, remote_path)
 
+    def push_corpus_manager(self, remote_path, local_path, corpus_id):
+        """Push a file on a storage with only Corpus Manager storage
+        """
+        raise NotImplementedError()
+
     @abc.abstractmethod
     def mkdir(self, remote_path):
         """build a directory - might not be effective for some storages like S3
@@ -200,12 +205,6 @@ class Storage(object):
 
     # @abc.abstractmethod
     def _delete_single(self, remote_path, isdir):
-        """Return a single file or directory
-        """
-        raise NotImplementedError()
-
-    # @abc.abstractmethod
-    def _delete_single_corpus_manager(self, remote_path, corpus_id, isdir):
         """Return a single file or directory
         """
         raise NotImplementedError()
@@ -230,25 +229,10 @@ class Storage(object):
         else:
             self._delete_single(remote_path, False)
 
-    def delete_corpus_manager(self, remote_path, corpus_id, recursive=False):
-        """Delete a file or a directory from Corpus Manager storage
+    def delete_corpus_manager(self, corpus_id):
+        """Delete a file from Corpus Manager storage
         """
-        if self.isdir(remote_path):
-            def rm_rec(path):
-                files = self.listdir(remote_path=path)
-                for f in files:
-                    internal_path = self._internal_path(f)
-                    if internal_path.endswith('/') and internal_path != path:
-                        rm_rec(internal_path)
-                    else:
-                        self._delete_single_corpus_manager(internal_path, corpus_id, False)
-                self._delete_single_corpus_manager(path, corpus_id, True)
-
-            if not recursive:
-                raise ValueError("non recursive delete can not delete directory")
-            rm_rec(remote_path)
-        else:
-            self._delete_single_corpus_manager(remote_path, corpus_id, False)
+        raise NotImplementedError()
 
     @abc.abstractmethod
     def rename(self, old_remote_path, new_remote_path):
