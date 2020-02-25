@@ -102,7 +102,7 @@ class CMStorages(Storage):
         # if not remote_path.startswith('/'):
         #     remote_path = '/' + remote_path
 
-        remote_path = f"/{self.root_folder}/" + remote_path + local_path.split("/")[-1]
+        remote_path = f"/{self.root_folder}/" + remote_path + os.path.basename(local_path)
         files = {
             'filename': (None, remote_path),
             'accountId': (None, self.account_id),
@@ -214,6 +214,9 @@ class CMStorages(Storage):
         if response.status_code != 200:
             raise ValueError("Cannot list segment '%s' in '%s'." % (search_query, remote_ids))
         list_segment = response.json()
+        for segment in list_segment["segments"]:
+            for corpus in segment["corpus"]:
+                corpus["filename"] = corpus["filename"].replace("/" + self.root_folder, "")
         if "error" in list_segment:
             raise ValueError("Cannot list segment '%s' in '%s'." % (remote_ids,
                                                                     list_segment['error']))
