@@ -97,11 +97,6 @@ class CMStorages(Storage):
                 'cannot push %s, only support format of the corpus (application/x-tmx+xml, '
                 'text/bitext)' % local_path)
 
-        # if remote_path == "":
-        #     remote_path = '/' + local_path.split("/")[-1]
-        # if not remote_path.startswith('/'):
-        #     remote_path = '/' + remote_path
-
         remote_path = f"/{self.root_folder}/" + remote_path + os.path.basename(local_path)
         files = {
             'filename': (None, remote_path),
@@ -125,22 +120,15 @@ class CMStorages(Storage):
             raise ValueError('http storage %s can not handle host_url' % self._storage_id)
 
         listdir = {}
-
-        if not remote_path.endswith('/'):
-            remote_path = remote_path + "/"
-
-        if not remote_path.startswith('/'):
-            remote_path = '/' + remote_path
-        # remote_path = f"/{self.root_folder}" + remote_path
+        remote_path = '/' + self.root_folder + "/" + self._internal_path(remote_path)
 
         data = {
-            'prefix': f"/{self.root_folder}/",
+            'prefix': f"{remote_path}",
             'accountId': self.account_id
         }
 
         response = requests.post(f'{self.host_url}/corpus/list', data=data)
 
-        # list_objects = requests.get(self.host_url + "/corpus/list?accountId=" + self.account_id)
         list_objects = response.json()
         # TODO use "directory" parameter as SES to avoid loading all corpus and filter manually
         #  as current version
@@ -149,29 +137,26 @@ class CMStorages(Storage):
                 listdir[key['Prefix'] + '/'] = {'is_dir': True, 'type': self.resource_type}
         if 'files' in list_objects:
             for key in list_objects['files']:
-                if key['filename'].startswith(f'/{self.root_folder}'):
-                    key['filename'] = key['filename'].replace(f"/{self.root_folder}", "")
                 if remote_path in key['filename']:
                     date_time = datetime.strptime(key["createdAt"].strip(), "%a %b %d %H:%M:%S %Y")
                     basename = os.path.basename(key["filename"])
                     folder = os.path.dirname(key['filename'])
                     if os.path.join(remote_path, basename) == key['filename']:
-                        listdir[key['filename']] = {'entries': int(key.get('nbSegments')),
-                                                    'format': key.get('format'),
-                                                    'id': key.get('id'),
-                                                    "type": self.resource_type,
-                                                    'sourceLanguage': key.get('sourceLanguage'),
-                                                    'targetLanguages': key.get('targetLanguages'),
-                                                    'last_modified': datetime_to_timestamp(
-                                                        date_time)}
+                        filename = key["filename"][len(self.root_folder) + 1:]
+                        listdir[filename] = {'entries': int(key.get('nbSegments')),
+                                             'format': key.get('format'),
+                                             'id': key.get('id'),
+                                             "type": self.resource_type,
+                                             'sourceLanguage': key.get('sourceLanguage'),
+                                             'targetLanguages': key.get('targetLanguages'),
+                                             'last_modified': datetime_to_timestamp(
+                                                 date_time)}
                     if remote_path in folder or remote_path == '/':
-                        remote_path = remote_path.replace("/" + self.root_folder, "")
                         sub_dir = folder.split(remote_path)[1]
                         internal_sub_dir = self._internal_path(sub_dir)
                         if len(internal_sub_dir) > 0:
-                            listdir[os.path.join(remote_path,
-                                                 internal_sub_dir + '/')] = {'is_dir': True,
-                                                                             'type': self.resource_type}
+                            listdir[internal_sub_dir + '/'] = {'is_dir': True,
+                                                               'type': self.resource_type}
         return listdir
 
     def delete_corpus_manager(self, corpus_id):
@@ -281,30 +266,15 @@ class CMStorages(Storage):
         return False
 
     def exists(self, remote_path):
-        if remote_path == '':
-            return True
-        if not remote_path.startswith("/"):
-            remote_path = "/" + remote_path
-        if ('/' + self.root_folder) not in remote_path:
-            remote_path = '/' + self.root_folder + "/" + self._internal_path(remote_path)
-        if '.' in remote_path:
-            params = {
-                'accountId': self.account_id,
-                'filename': remote_path,
-            }
-            response = requests.post(f'{self.host_url}/corpus/exists', data=params)
-            if "true" in response.text:
-                return True
-        else:
-            if not remote_path.endswith('/'):
-                remote_path += '/'
-            data = {
-                'prefix': remote_path,
-                'accountId': self.account_id
-            }
+        remote_path = '/' + self.root_folder + "/" + self._internal_path(remote_path)
+        data = {
+            'prefix': remote_path,
+            'accountId': self.account_id
+        }
 
-            response = requests.post(f'{self.host_url}/corpus/list', data=data)
-            if "files" in response.json():
+        response = requests.post(f'{self.host_url}/corpus/list', data=data)
+        if "files" in response.json():
+            if len(response.json()["files"]) > 0:
                 return True
         return False
 
