@@ -139,7 +139,7 @@ class Storage(object):
                 if check_integrity_fn is not None and not check_integrity_fn(local_path):
                     try:
                         shutil.rmtree(local_path)
-                    except:
+                    except EnvironmentError:
                         pass
                     raise RuntimeError('integrity check failed on %s' % local_path)
         else:
