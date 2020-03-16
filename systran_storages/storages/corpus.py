@@ -1,6 +1,5 @@
 """Definition of `Corpus Manager` storage class"""
 import json
-import re
 from datetime import datetime
 import logging
 import shutil
