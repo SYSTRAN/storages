@@ -223,8 +223,7 @@ class StorageClient(object):
 
         if client.isdir(remote_path):
             return client.listdir(remote_path, recursive)
-        else:
-            return client.listdir(remote_path, recursive, True)
+        return client.listdir(remote_path, recursive, True)
 
     def delete(self, remote_path, recursive=False, storage_id=None):
         """Deletes a file or directory from a storage."""
