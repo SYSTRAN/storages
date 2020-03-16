@@ -108,7 +108,7 @@ class Storage(object):
                 os.makedirs(local_path)
             with lock(local_path):
                 allfiles = {}
-                for root, dirs, files in os.walk(local_path):
+                for root, _, files in os.walk(local_path):
                     if os.path.basename(root) == _META_SUBDIR:
                         continue
                     for f in files:
