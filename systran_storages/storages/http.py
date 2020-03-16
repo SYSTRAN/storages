@@ -1,10 +1,11 @@
 """Definition of `http` storage class"""
 
 import os
-import requests
 import tempfile
 import shutil
 import logging
+
+import requests
 
 from systran_storages.storages import Storage
 
