@@ -20,9 +20,9 @@ def resolvedjson(path):
     with open(path) as jsonf:
         content = jsonf.read()
         data = json.loads(content)
-    if 'filter' in data:
-        filter_query = data['filter']
-        return filter_query
+        if 'filter' in data:
+            filter_query = data['filter']
+    return filter_query
 
 
 def check_format(corpus_format):
