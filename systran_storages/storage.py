@@ -42,7 +42,7 @@ class StorageClient(object):
             fields = path.split(':')
             if len(fields) > 2:
                 raise ValueError('invalid path format: %s' % path)
-            elif len(fields) == 2:
+            if len(fields) == 2:
                 storage_id = fields[0]
                 path = fields[1]
 
