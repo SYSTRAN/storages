@@ -12,7 +12,7 @@ from systran_storages import StorageClient
 def resolvedpath(path):
     fields = path.split(':')
     if not len(fields) == 2 or not fields[1].startswith('/'):
-        raise argparse.ArgumentError("incorrect storage path: %s" % path)
+        raise argparse.ArgumentError(None, "incorrect storage path: %s" % path)
     return path
 
 
@@ -27,7 +27,7 @@ def resolvedjson(path):
 
 def check_format(corpus_format):
     if corpus_format not in ['application/x-tmx+xml', 'text/bitext']:
-        raise argparse.ArgumentError("incorrect format: %s" % corpus_format)
+        raise argparse.ArgumentError(None, "incorrect format: %s" % corpus_format)
     return corpus_format
 
 
