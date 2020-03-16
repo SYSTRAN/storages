@@ -104,9 +104,9 @@ class SwiftStorage(Storage):
             for r in results:
                 has_results = True
                 if not r["success"]:
-                    raise RuntimeError("Cannot download file [%s]: %s", (remote_path, r["error"]))
+                    raise RuntimeError("Cannot download file [%s]: %s" % (remote_path, r["error"]))
             if not has_results:
-                raise RuntimeError("Cannot download file [%s]: NO RESULTS", remote_path)
+                raise RuntimeError("Cannot download file [%s]: NO RESULTS" % remote_path)
 
             with open(os.path.join(tmpdir, remote_path), "rb") as f:
                 for chunk in iter(lambda: f.read(buffer_size), b''):
