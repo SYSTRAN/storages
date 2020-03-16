@@ -105,13 +105,10 @@ class CMStorages(Storage):
         }
 
         response = requests.post(f'{self.host_url}/corpus/import', files=files)
-
-        if response.status_code == 200:
-            status = True if "id" in response.json() else False
-        else:
+        if response.status_code != 200:
             raise RuntimeError(
                 'cannot push %s (response code %d)' % (remote_path, response.status_code))
-
+        status = "id" in response.json()
         return status
 
     def listdir(self, remote_path, recursive=False, is_file=False):
@@ -165,11 +162,10 @@ class CMStorages(Storage):
         )
 
         response = requests.get(f'{self.host_url}/corpus/delete', params=params)
-        if response.status_code == 200:
-            status = True if response.ok else False
-        else:
+        if response.status_code != 200:
             raise RuntimeError(
                 'cannot delete %s (response code %d)' % response.status_code)
+        status = response.ok
         return status
 
     def rename(self, old_remote_path, new_remote_path):
@@ -233,11 +229,10 @@ class CMStorages(Storage):
         }
 
         response = requests.post(f'{self.host_url}/corpus/segment/modify', data=params)
-        if response.status_code == 200:
-            status = True if response.json()["status"] == 'ok' else False
-        else:
+        if response.status_code != 200:
             raise ValueError(
                 "Cannot modify segment '%s' in '%s'." % (seg_id, corpus_id))
+        status = response.json()["status"] == 'ok'
         return status
 
     def seg_add(self, corpus_id, segments):
