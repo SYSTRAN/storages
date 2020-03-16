@@ -113,7 +113,7 @@ def main():
         directory = args.storage.endswith('/')
         if directory:
             if os.path.isfile(args.local):
-                raise ValueError("%s should be a directory", args.local)
+                raise ValueError("%s should be a directory" % args.local)
             client.get_directory(args.storage, args.local)
         else:
             client.get_file(args.storage, args.local)
