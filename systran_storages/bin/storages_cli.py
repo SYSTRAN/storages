@@ -21,14 +21,14 @@ def resolvedjson(path):
         content = jsonf.read()
         data = json.loads(content)
     if 'filter' in data:
-        filter = data['filter']
-    return filter
+        filter_query = data['filter']
+        return filter_query
 
 
-def checkformat(format):
-    if format not in ['application/x-tmx+xml', 'text/bitext']:
-        raise argparse.ArgumentError("incorrect format: %s" % format)
-    return format
+def check_format(corpus_format):
+    if corpus_format not in ['application/x-tmx+xml', 'text/bitext']:
+        raise argparse.ArgumentError("incorrect format: %s" % corpus_format)
+    return corpus_format
 
 
 def main():
@@ -69,7 +69,7 @@ def main():
     parser_get.add_argument('storage', type=resolvedpath,
                             help='path to file or directory to download, directory must ends with /')
     parser_get.add_argument('corpusId', type=str, help='corpus id')
-    parser_get.add_argument('format', type=checkformat,
+    parser_get.add_argument('format', type=check_format,
                             help='Format of the corpus (application/x-tmx+xml, text/bitext)')
 
     parser_search = subparsers.add_parser('search', help='list corpus segments identified '
