@@ -156,9 +156,7 @@ class SwiftStorage(Storage):
         listfiles = self.listdir(old_remote_path, True)
         for f in listfiles:
             assert f[:len(old_remote_path)] == old_remote_path, "inconsistent listdir result"
-            obj = SwiftCopyObject(f, {"destination": "/%s/%s%s" % (
-                                                                   self._container,
-                                                                   new_remote_path,
+            obj = SwiftCopyObject(f, {"destination": "/%s/%s%s" % (self._container, new_remote_path,
                                                                    f[len(old_remote_path):])})
             results = self._client.copy(self._container, [obj])
             has_results = False
