@@ -58,11 +58,10 @@ class LocalStorage(Storage):
     def stat(self, remote_path):
         if os.path.isdir(remote_path):
             return {'is_dir': True}
-        elif os.path.isfile(remote_path):
+        if os.path.isfile(remote_path):
             stat = os.stat(remote_path)
             return {'size': stat.st_size, 'last_modified': stat.st_mtime}
-        else:
-            return False
+        return False
 
     def listdir(self, remote_path, recursive=False, is_file=False):
         listfile = {}

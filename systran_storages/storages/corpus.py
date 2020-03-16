@@ -248,11 +248,10 @@ class CMStorages(Storage):
         proc = os.popen(f"http {self.host_url}/corpus/segment/add < tmp.json")
 
         tmp = json.loads(proc.read())
-        if tmp:
-            return tmp
-        else:
+        if not tmp:
             raise ValueError(
                 "Cannot add segment '%s' in '%s'." % (segments, corpus_id))
+        return tmp
 
     def isdir(self, remote_path):
         if remote_path.endswith('/'):
