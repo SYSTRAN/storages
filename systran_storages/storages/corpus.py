@@ -83,7 +83,7 @@ class CMStorages(Storage):
 
         return generate()
 
-    def push_corpus_manager(self, local_path, remote_path, corpus_id):
+    def push_corpus_manager(self, local_path, remote_path, corpus_id, user_data):
         if self.host_url is None:
             raise ValueError('http storage %s can not handle host url' % self._storage_id)
 
@@ -101,7 +101,9 @@ class CMStorages(Storage):
             'filename': (None, remote_path),
             'accountId': (None, self.account_id),
             'format': (None, format_path),
+            'id': (None, corpus_id),
             'corpus': (remote_path, open(local_path, 'rb')),
+            'data': (None, user_data)
         }
 
         response = requests.post(f'{self.host_url}/corpus/import', files=files)
@@ -245,13 +247,12 @@ class CMStorages(Storage):
         with tempfile.NamedTemporaryFile(delete=False, mode="w") as tmpfile:
             tmpfile.write(data)
 
-        proc = os.popen(f"http {self.host_url}/corpus/segment/add < tmp.json")
-
-        tmp = json.loads(proc.read())
-        if not tmp:
+        command = f"http {self.host_url}/corpus/segment/add < {tmpfile.name}"
+        return_code = os.system(command)
+        if return_code != 0:
             raise ValueError(
                 "Cannot add segment '%s' in '%s'." % (segments, corpus_id))
-        return tmp
+        return True
 
     def isdir(self, remote_path):
         if remote_path.endswith('/'):
