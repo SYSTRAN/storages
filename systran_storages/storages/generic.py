@@ -40,13 +40,11 @@ class Storage(object):
         self._storage_id = storage_id
 
     # Non conventional storage might need to override these.
-    @abc.abstractmethod
     def join(self, path, *paths):
         """Build a path respecting storage prefix
         """
         return os.path.join(path, *paths)
 
-    @abc.abstractmethod
     def split(self, path):
         """Split a path
         """
@@ -63,7 +61,6 @@ class Storage(object):
         """
         raise NotImplementedError()
 
-    @abc.abstractmethod
     def _get_checksum_file(self, local_path):
         """return checksum sum used by storage or None
         """
@@ -188,7 +185,7 @@ class Storage(object):
 
             push_rec(local_path, remote_path)
 
-    def push_corpus_manager(self, remote_path, local_path, corpus_id):
+    def push_corpus_manager(self, local_path, remote_path, corpus_id, user_data):
         """Push a file on a storage with only Corpus Manager storage
         """
         raise NotImplementedError()
@@ -270,7 +267,6 @@ class Storage(object):
         """
         raise NotImplementedError()
 
-    @abc.abstractmethod
     def _external_path(self, path):
         """convert the internal path to the external user path
         """
