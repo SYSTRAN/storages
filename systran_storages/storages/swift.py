@@ -53,9 +53,9 @@ class SwiftStorage(Storage):
             local_stat = os.stat(local_path)
             for r in results:
                 if r['success']:
-                    if int(r['headers']['content-length']) != local_stat.st_size:
+                    if r['headers']['content-length'] != local_stat.st_size:
                         return False
-                    timestamp = float(r["headers"]["x-timestamp"])
+                    timestamp = r["headers"]["x-timestamp"]
                     if int(local_stat.st_mtime) == int(timestamp):
                         return True
         else:
@@ -68,8 +68,9 @@ class SwiftStorage(Storage):
             for r in results:
                 if r['success']:
                     return {'is_dir': False,
-                            'size': r['headers']['content-length'],
-                            'last_modified': r['headers']['x-timestamp']}
+                            'size': int(r['headers']['content-length']),
+                            'last_modified': float(r['headers']['x-timestamp']),
+                            'etag': r['headers']['etag']}
             remote_path += '/'
         results = self._client.list(container=self._container, options={"prefix": remote_path,
                                                                         "delimiter": "/"})
