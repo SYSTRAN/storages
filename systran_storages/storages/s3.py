@@ -135,10 +135,9 @@ class S3Storage(Storage):
                                            'etag': key['ETag']}
                     if key['Key'].endswith('/'):
                         listdir[key['Key']]['is_dir'] = True
-            try:
-                list_objects_args['ContinuationToken'] = list_objects['NextContinuationToken']
-            except KeyError:
+            if 'NextContinuationToken' not in list_objects:
                 break
+            list_objects_args['ContinuationToken'] = list_objects['NextContinuationToken']
 
         return listdir
 
