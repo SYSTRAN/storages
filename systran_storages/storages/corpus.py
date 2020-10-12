@@ -125,40 +125,46 @@ class CMStorages(Storage):
         listdir = {}
 
         data = {
-            'prefix': self._create_path_from_root(remote_path),
+            'directory': self._create_path_from_root(remote_path),
             'accountId': self.account_id
         }
+        if recursive:
+            data = {
+                'prefix': self._create_path_from_root(remote_path),
+                'accountId': self.account_id
+            }
 
-        response = requests.post(f'{self.host_url}/corpus/list', data=data)
+        response = requests.get(f'{self.host_url}/corpus/list', params=data)
 
         list_objects = response.json()
-        # TODO use "directory" parameter as SES to avoid loading all corpus and filter manually
-        #  as current version
         if 'directories' in list_objects:
             for key in list_objects['directories']:
-                listdir[key['Prefix'] + '/'] = {'is_dir': True, 'type': self.resource_type}
+                new_dir = os.path.join(remote_path, key) + '/'
+                if new_dir.startswith('/'):
+                    new_dir = new_dir[1:]
+                if new_dir != '':
+                    listdir[new_dir] = {'is_dir': True, 'type': self.resource_type}
         if 'files' in list_objects:
             for key in list_objects['files']:
                 if remote_path in key['filename']:
                     date_time = datetime.strptime(key["createdAt"].strip(), "%a %b %d %H:%M:%S %Y")
-                    basename = os.path.basename(key["filename"])
-                    folder = os.path.dirname(key['filename'])
-                    if os.path.join(remote_path, basename) == key['filename']:
-                        filename = key["filename"][len(self.root_folder) + 1:]
-                        listdir[filename] = {'entries': int(key.get('nbSegments')),
-                                             'format': key.get('format'),
-                                             'id': key.get('id'),
-                                             "type": self.resource_type,
-                                             'sourceLanguage': key.get('sourceLanguage'),
-                                             'targetLanguages': key.get('targetLanguages'),
-                                             'last_modified': datetime_to_timestamp(
-                                                 date_time)}
-                    if remote_path in folder or remote_path == '/':
-                        sub_dir = folder.split(remote_path)[1]
-                        internal_sub_dir = self._internal_path(sub_dir)
-                        if len(internal_sub_dir) > 0:
-                            listdir[internal_sub_dir + '/'] = {'is_dir': True,
-                                                               'type': self.resource_type}
+                    filename = key["filename"][len(self.root_folder) + 1:]
+                    listdir[filename] = {'entries': int(key.get('nbSegments')),
+                                         'format': key.get('format'),
+                                         'id': key.get('id'),
+                                         "type": self.resource_type,
+                                         'sourceLanguage': key.get('sourceLanguage'),
+                                         'targetLanguages': key.get('targetLanguages'),
+                                         'last_modified': datetime_to_timestamp(
+                                             date_time)}
+                    if recursive:
+                        folder = os.path.dirname(key['filename'][len(self.root_folder) + 1:])
+                        all_dirs = folder.split("/")
+                        for folder_index, folder in enumerate(all_dirs):
+                            new_dir = "/".join(all_dirs[:folder_index + 1])
+                            if new_dir != '':
+                                listdir[new_dir + '/'] = {'is_dir': True, 'type': self.resource_type}
+
         return listdir
 
     def delete_corpus_manager(self, corpus_id):
