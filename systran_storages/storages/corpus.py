@@ -22,7 +22,13 @@ class CMStorages(Storage):
         self.host_url = host_url
         self.account_id = account_id
         self.resource_type = resource_type
-        self.root_folder = root_folder
+        if root_folder is None:
+            self.root_folder = ''
+        else:
+            self.root_folder = root_folder
+        self.root_folder = '/' + self.path_without_starting_slash(self.root_folder)
+        if self.root_folder.endswith('/'):
+            self.root_folder = self.root_folder[:-1]
         if self.host_url is None:
             raise ValueError('http storage %s can not handle host url' % self._storage_id)
 
@@ -31,7 +37,7 @@ class CMStorages(Storage):
             corpus_id = ""
             format_corpus = ""
             data = {
-                'prefix': remote_path,
+                'prefix': self._create_path_from_root(remote_path),
                 'accountId': self.account_id
             }
 
@@ -39,7 +45,7 @@ class CMStorages(Storage):
             list_objects = response.json()
             if "files" in list_objects:
                 for key in list_objects["files"]:
-                    if remote_path == key.get("filename"):
+                    if self._create_path_from_root(remote_path) == key.get("filename"):
                         corpus_id = key.get("id")
                         format_corpus = key.get("format")
 
@@ -114,11 +120,12 @@ class CMStorages(Storage):
         return status
 
     def listdir(self, remote_path, recursive=False, is_file=False):
+        if not is_file and not remote_path.endswith('/'):
+            remote_path += '/'
         listdir = {}
-        remote_path = '/' + self.root_folder + "/" + self._internal_path(remote_path)
 
         data = {
-            'prefix': f"{remote_path}",
+            'prefix': self._create_path_from_root(remote_path),
             'accountId': self.account_id
         }
 
@@ -257,9 +264,8 @@ class CMStorages(Storage):
         return False
 
     def exists(self, remote_path):
-        remote_path = '/' + self.root_folder + "/" + self._internal_path(remote_path)
         data = {
-            'prefix': remote_path,
+            'prefix': self._create_path_from_root(remote_path),
             'accountId': self.account_id
         }
 
@@ -269,7 +275,20 @@ class CMStorages(Storage):
                 return True
         return False
 
+    def _create_path_from_root(self, remote_path):
+        return_value = ''
+        if self.root_folder is not '':
+            return_value = '/' + self.path_without_starting_slash(self.root_folder)
+        if remote_path is not '':
+            return_value += '/' + self.path_without_starting_slash(remote_path)
+        if return_value is '':
+            return '/'
+        return return_value
+
     def _internal_path(self, remote_path):
+        return self.path_without_starting_slash(remote_path)
+
+    def path_without_starting_slash(self, remote_path):
         if remote_path.startswith('/'):
             return remote_path[1:]
         return remote_path
