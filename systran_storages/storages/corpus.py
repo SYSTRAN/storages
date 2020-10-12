@@ -23,6 +23,8 @@ class CMStorages(Storage):
         self.account_id = account_id
         self.resource_type = resource_type
         self.root_folder = root_folder
+        if self.host_url is None:
+            raise ValueError('http storage %s can not handle host url' % self._storage_id)
 
     def _get_file_safe(self, remote_path, local_path):
         with tempfile.NamedTemporaryFile(delete=False) as tmpfile:
@@ -84,8 +86,6 @@ class CMStorages(Storage):
         return generate()
 
     def push_corpus_manager(self, local_path, remote_path, corpus_id, user_data):
-        if self.host_url is None:
-            raise ValueError('http storage %s can not handle host url' % self._storage_id)
 
         if local_path.endswith(".txt"):
             format_path = 'text/bitext'
@@ -114,9 +114,6 @@ class CMStorages(Storage):
         return status
 
     def listdir(self, remote_path, recursive=False, is_file=False):
-        if self.host_url is None:
-            raise ValueError('http storage %s can not handle host_url' % self._storage_id)
-
         listdir = {}
         remote_path = '/' + self.root_folder + "/" + self._internal_path(remote_path)
 
