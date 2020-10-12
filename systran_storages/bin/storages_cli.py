@@ -108,7 +108,11 @@ def main():
                 print("dir", k)
             else:
                 date = datetime.fromtimestamp(listdir[k]["last_modified"])
-                print("   ", "%10d" % listdir[k]["entries"], date.strftime("%Y-%m-%dT%H:%M:%S"), k)
+                if "entries" in listdir[k]:
+                    size = listdir[k]["entries"]
+                else:
+                    size = listdir[k]["size"]
+                print("   ", "%10d" % size, date.strftime("%Y-%m-%dT%H:%M:%S"), k)
     elif args.cmd == "get":
         directory = args.storage.endswith('/')
         if directory:
