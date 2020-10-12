@@ -7,6 +7,8 @@ import tempfile
 import os
 
 import requests
+from requests_toolbelt.multipart.encoder import MultipartEncoder
+from requests_toolbelt.multipart import decoder
 
 from systran_storages.storages import Storage
 from systran_storages.storages.utils import datetime_to_timestamp
@@ -33,35 +35,55 @@ class CMStorages(Storage):
             raise ValueError('http storage %s can not handle host url' % self._storage_id)
 
     def _get_file_safe(self, remote_path, local_path):
-        with tempfile.NamedTemporaryFile(delete=False) as tmpfile:
-            corpus_id = ""
-            format_corpus = ""
-            data = {
-                'prefix': self._create_path_from_root(remote_path),
-                'accountId': self.account_id
-            }
+        corpus_id = ""
+        format_corpus = ""
+        source_language = ""
+        target_language = ""
+        data = {
+            'prefix': self._create_path_from_root(remote_path),
+            'accountId': self.account_id
+        }
 
-            response = requests.post(f'{self.host_url}/corpus/list', data=data)
-            list_objects = response.json()
-            if "files" in list_objects:
-                for key in list_objects["files"]:
-                    if self._create_path_from_root(remote_path) == key.get("filename"):
-                        corpus_id = key.get("id")
-                        format_corpus = key.get("format")
+        response = requests.get(f'{self.host_url}/corpus/list', data=data)
+        list_objects = response.json()
+        found = False
+        if "files" in list_objects:
+            for key in list_objects["files"]:
+                if self._create_path_from_root(remote_path) == key.get("filename"):
+                    corpus_id = key.get("id")
+                    format_corpus = key.get("format")
+                    source_language = key.get("sourceLanguage")
+                    target_language = key.get("targetLanguages")[0]
+                    if format_corpus == '':
+                        format_corpus = 'application/x-tmx+xml'
+                    found = True
 
-            params = (
-                ('accountId', self.account_id),
-                ('id', corpus_id),
-                ('format', format_corpus),
-            )
+        if not found:
+            raise ValueError("corpus not found")
+        params = {
+            'accountId': self.account_id,
+            'id': corpus_id,
+            'format': "text/monolingual"
+        }
 
-            response = requests.get(f'{self.host_url}/corpus/export', params=params)
+        response = requests.get(f'{self.host_url}/corpus/export', params=params)
 
-            if response.status_code != 200:
-                raise RuntimeError(
-                    'cannot not get %s (response code %d)' % (remote_path, response.status_code))
-            tmpfile.write(response.content)
-            shutil.move(tmpfile.name, local_path)
+        if response.status_code != 200:
+            raise RuntimeError(
+                'cannot not get %s (response code %d)' % (remote_path, response.status_code))
+        if "multipart/mixed" not in response.headers.get("Content-Type"):
+            with tempfile.NamedTemporaryFile(delete=False) as tmpfile:
+                tmpfile.write(response.content)
+                shutil.move(tmpfile.name, local_path)
+                return
+        multipart_data = decoder.MultipartDecoder.from_response(response)
+        for part_index, part in enumerate(multipart_data.parts):
+            with tempfile.NamedTemporaryFile(delete=False) as tmpfile:
+                tmpfile.write(part.content)
+                if part_index == 0:
+                    shutil.move(tmpfile.name, local_path + "." + source_language)
+                else:
+                    shutil.move(tmpfile.name, local_path + "." + target_language)
 
     def _check_existing_file(self, remote_path, local_path):
         # not optimized for http download yet
