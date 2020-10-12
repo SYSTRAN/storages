@@ -184,7 +184,7 @@ class CMStorages(Storage):
         raise NotImplementedError()
 
     def mkdir(self, remote_path):
-        return True
+        raise NotImplementedError()
 
     def search(self, remote_ids, search_query, nb_skip, nb_returns):
         params = {
