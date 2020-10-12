@@ -265,21 +265,39 @@ class CMStorages(Storage):
         return True
 
     def isdir(self, remote_path):
-        if remote_path.endswith('/'):
+        full_path_to_check = self._create_path_from_root(remote_path)
+        if full_path_to_check.endswith('/'):
+            full_path_to_check = full_path_to_check[:-1]
+        if full_path_to_check.startswith('/'):
+            full_path_to_check = full_path_to_check[1:]
+        directoryArray = full_path_to_check.split("/")
+        if len(directoryArray) == 0:
+            raise ValueError(f"Bad remote_path: {remote_path}")
+        if len(directoryArray) == 1 and directoryArray[0] == '':
             return True
+        else:
+            parentDirectory = '/' + '/'.join(directoryArray[:-1])
+            data = {
+                'directory': parentDirectory,
+                'accountId': self.account_id
+            }
+            response = requests.get(f'{self.host_url}/corpus/list', params=data)
+            if "directories" in response.json():
+                if directoryArray[-1] in response.json()["directories"]:
+                    return True
         return False
 
     def exists(self, remote_path):
+        if self.isdir(remote_path):
+            return True
         data = {
-            'prefix': self._create_path_from_root(remote_path),
+            'filename': self._create_path_from_root(remote_path),
             'accountId': self.account_id
         }
+        response = requests.get(f'{self.host_url}/corpus/exists', params=data)
+        return response.status_code == 200 and "true" in str(response.content)
 
-        response = requests.post(f'{self.host_url}/corpus/list', data=data)
-        if "files" in response.json():
-            if len(response.json()["files"]) > 0:
-                return True
-        return False
+
 
     def _create_path_from_root(self, remote_path):
         return_value = ''
