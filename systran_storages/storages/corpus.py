@@ -89,6 +89,10 @@ class CMStorages(Storage):
 
         return generate()
 
+    def stream(self, remote_path, buffer_size=1024):
+        corpus = self._get_corpus_info_from_remote_path(remote_path)
+        return self.stream_corpus_manager(corpus.get("id"), corpus.get("format"), buffer_size)
+
     def push_corpus_manager(self, local_path, remote_path, corpus_id, user_data):
 
         if local_path.endswith(".txt"):
@@ -164,6 +168,10 @@ class CMStorages(Storage):
                                 listdir[new_dir + '/'] = {'is_dir': True, 'type': self.resource_type}
 
         return listdir
+
+    def _delete_single(self, remote_path, isdir):
+        corpus = self._get_corpus_info_from_remote_path(remote_path)
+        self.delete_corpus_manager(corpus.get("id"))
 
     def delete_corpus_manager(self, corpus_id):
         params = (
