@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 import logging
+import sys
 from datetime import datetime
 
 from systran_storages import StorageClient
@@ -65,7 +66,7 @@ def main():
     parser_stat.add_argument('storage', type=resolvedpath,
                              help='path to file or directory to download, directory must ends with /')
 
-    parser_get = subparsers.add_parser('download', help='Export a corpus in TMX(default) or biText')
+    parser_get = subparsers.add_parser('stream_corpus_manager', help='Export a corpus in TMX(default) or biText')
     parser_get.add_argument('storage', type=resolvedpath,
                             help='path to file or directory to download, directory must ends with /')
     parser_get.add_argument('corpusId', type=str, help='corpus id')
@@ -87,6 +88,9 @@ def main():
     parser_search.add_argument('storage', type=resolvedpath, help='remote path')
     parser_search.add_argument('corpus_id', help='corpus id')
     parser_search.add_argument('ids', help='list segment id')
+
+    parser_stream = subparsers.add_parser('stream', help='print out specific corpus by name')
+    parser_stream.add_argument('storage', type=resolvedpath, help='remote path')
 
     args = parser.parse_args()
     if args.info:
@@ -127,8 +131,18 @@ def main():
         client.delete_corpus_manager(args.storage, args.corpusId)
     elif args.cmd == "stat":
         print(client.stat(args.storage))
-    elif args.cmd == "download":
-        client.stream_corpus_manager(args.storage, args.corpusId, args.format)
+    elif args.cmd == "stream_corpus_manager":
+        byte_result = b''
+        for chunk in client.stream_corpus_manager(args.storage, args.corpusId, args.format):
+            if chunk:
+                byte_result += chunk
+        sys.stdout.write(byte_result.decode("utf-8"))
+    elif args.cmd == "stream":
+        byte_result = b''
+        for chunk in client.stream(args.storage):
+            if chunk:
+                byte_result += chunk
+        sys.stdout.write(byte_result.decode("utf-8"))
     elif args.cmd == "search":
         print(client.search(args.storage, args.id, args.search_query, args.skip, args.limit))
     elif args.cmd == "seg_delete":
