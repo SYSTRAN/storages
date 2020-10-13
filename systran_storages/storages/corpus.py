@@ -35,34 +35,10 @@ class CMStorages(Storage):
             raise ValueError('http storage %s can not handle host url' % self._storage_id)
 
     def _get_file_safe(self, remote_path, local_path):
-        corpus_id = ""
-        format_corpus = ""
-        source_language = ""
-        target_language = ""
-        data = {
-            'prefix': self._create_path_from_root(remote_path),
-            'accountId': self.account_id
-        }
-
-        response = requests.get(f'{self.host_url}/corpus/list', data=data)
-        list_objects = response.json()
-        found = False
-        if "files" in list_objects:
-            for key in list_objects["files"]:
-                if self._create_path_from_root(remote_path) == key.get("filename"):
-                    corpus_id = key.get("id")
-                    format_corpus = key.get("format")
-                    source_language = key.get("sourceLanguage")
-                    target_language = key.get("targetLanguages")[0]
-                    if format_corpus == '':
-                        format_corpus = 'application/x-tmx+xml'
-                    found = True
-
-        if not found:
-            raise ValueError("corpus not found")
+        corpus = self._get_corpus_info_from_remote_path(remote_path)
         params = {
             'accountId': self.account_id,
-            'id': corpus_id,
+            'id': corpus.get("id"),
             'format': "text/monolingual"
         }
 
@@ -81,9 +57,9 @@ class CMStorages(Storage):
             with tempfile.NamedTemporaryFile(delete=False) as tmpfile:
                 tmpfile.write(part.content)
                 if part_index == 0:
-                    shutil.move(tmpfile.name, local_path + "." + source_language)
+                    shutil.move(tmpfile.name, local_path + "." + corpus.get("sourceLanguage"))
                 else:
-                    shutil.move(tmpfile.name, local_path + "." + target_language)
+                    shutil.move(tmpfile.name, local_path + "." + corpus.get("targetLanguages")[0])
 
     def _check_existing_file(self, remote_path, local_path):
         # not optimized for http download yet
@@ -201,6 +177,19 @@ class CMStorages(Storage):
                 'cannot delete %s (response code %d)' % response.status_code)
         status = response.ok
         return status
+
+    def _get_corpus_info_from_remote_path(self, remote_path):
+        data = {
+            'prefix': self._create_path_from_root(remote_path),
+            'accountId': self.account_id
+        }
+        response = requests.get(f'{self.host_url}/corpus/list', data=data)
+        list_objects = response.json()
+        if "files" in list_objects:
+            for key in list_objects["files"]:
+                if self._create_path_from_root(remote_path) == key.get("filename"):
+                    return key
+        raise ValueError(f"corpus not found from remote_path: {remote_path}")
 
     def rename(self, old_remote_path, new_remote_path):
         raise NotImplementedError()
