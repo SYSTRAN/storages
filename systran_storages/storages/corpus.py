@@ -319,7 +319,36 @@ class CMStorages(Storage):
         response = requests.get(f'{self.host_url}/corpus/exists', params=data)
         return response.status_code == 200 and "true" in str(response.content)
 
+    def push_file(self, local_path, remote_path):
+        data = {
+            'filename': self._create_path_from_root(remote_path),
+            'accountId': self.account_id
+        }
 
+        response = requests.get(f'{self.host_url}/corpus/exists', params=data)
+        if response.status_code == 200 and "true" in str(response.content):
+            raise RuntimeError("Cannot push file: %s already exists"
+                               % remote_path)
+        with open(local_path, "rb") as f:
+            data = f.read()
+            if local_path.endswith(".txt"):
+                format_path = 'text/bitext'
+            elif local_path.endswith(".tmx"):
+                format_path = 'application/x-tmx+xml'
+            mp_encoder = MultipartEncoder(
+                [
+                    ('accountId', self.account_id),
+                    ('format', format_path),
+                    ('importOptions', '{"cleanFormatting": true}'),
+                    ('filename', self._create_path_from_root(remote_path)),
+                    ('corpus', data)
+                ]
+            )
+            response = requests.post(f'{self.host_url}/corpus/import', data=mp_encoder,
+                                     headers={'Content-Type': mp_encoder.content_type})
+            if response.status_code != 200:
+                raise ValueError(
+                    "Cannot import file '%s' in '%s'." % (local_path, remote_path))
 
     def _create_path_from_root(self, remote_path):
         return_value = ''
