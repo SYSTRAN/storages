@@ -331,6 +331,11 @@ class CMStorages(Storage):
                 format_path = 'text/bitext'
             elif local_path.endswith(".tmx"):
                 format_path = 'application/x-tmx+xml'
+            else:
+                raise ValueError(
+                    'cannot push %s, only support format of the corpus (application/x-tmx+xml, '
+                    'text/bitext)' % local_path)
+
             mp_encoder = MultipartEncoder(
                 [
                     ('accountId', self.account_id),
