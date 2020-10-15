@@ -19,11 +19,11 @@ LOGGER = logging.getLogger(__name__)
 class CMStorages(Storage):
     """Corpus Manager storage."""
 
-    def __init__(self, storage_id, host_url, resource_type, root_folder, account_id=None):
+    def __init__(self, storage_id, host_url, root_folder, account_id=None):
         super(CMStorages, self).__init__(storage_id)
         self.host_url = host_url
         self.account_id = account_id
-        self.resource_type = resource_type
+        self.resource_type = "corpusmanager"
         if root_folder is None:
             self.root_folder = ''
         else:

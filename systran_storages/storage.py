@@ -87,7 +87,6 @@ class StorageClient(object):
                         storage_id,
                         config.get('host_url'),
                         account_id=config.get('account_id'),
-                        resource_type=config.get('resource_type'),
                         root_folder=config.get('root_folder'))
                 elif config['type'] == 'local':
                     client = storages.LocalStorage(
