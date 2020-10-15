@@ -62,7 +62,6 @@ class CMStorages(Storage):
                     shutil.move(tmpfile.name, local_path + "." + corpus.get("targetLanguages")[0])
 
     def _check_existing_file(self, remote_path, local_path):
-        # not optimized for http download yet
         return False
 
     def stream_corpus_manager(self, remote_id, remote_format, buffer_size=1024):
