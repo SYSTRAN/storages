@@ -162,9 +162,9 @@ class CMStorages(Storage):
                         folder = os.path.dirname(key['filename'][len(self.root_folder) + 1:])
                         all_dirs = folder.split("/")
                         for folder_index, folder in enumerate(all_dirs):
-                            new_dir = "/".join(all_dirs[:folder_index + 1])
-                            if new_dir != '':
-                                listdir[new_dir + '/'] = {'is_dir': True, 'type': self.resource_type}
+                            new_dir = "/".join(all_dirs[:folder_index + 1]) + "/"
+                            if new_dir != '' and remote_path in new_dir:
+                                listdir[new_dir] = {'is_dir': True, 'type': self.resource_type}
 
         return listdir
 
