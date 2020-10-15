@@ -82,7 +82,7 @@ class StorageClient(object):
                         config['get_pattern'],
                         pattern_push=config.get('post_pattern'),
                         pattern_list=config.get('list_pattern'))
-                elif config['type'] == 'corpus':
+                elif config['type'] == 'systran_corpusmanager':
                     client = storages.CMStorages(
                         storage_id,
                         config.get('host_url'),
