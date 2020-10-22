@@ -35,6 +35,15 @@ class CMStorages(Storage):
             raise ValueError('http storage %s can not handle host url' % self._storage_id)
 
     def _get_file_safe(self, remote_path, local_path):
+        self._get_main_file_safe(remote_path, local_path)
+        self._get_checksum_file_safe(remote_path, local_path)
+
+    def _get_checksum_file(self, local_path):
+        if not local_path.endswith(".txt") or not local_path.endswith(".tmx"):
+            local_path = local_path[:-3]
+        return local_path + ".tmp"
+
+    def _get_main_file_safe(self, remote_path, local_path):
         corpus = self._get_corpus_info_from_remote_path(remote_path)
         params = {
             'accountId': self.account_id,
@@ -61,7 +70,42 @@ class CMStorages(Storage):
                 else:
                     shutil.move(tmpfile.name, local_path + "." + corpus.get("targetLanguages")[0])
 
+    def _get_checksum_from_database(self, remote_path):
+        corpus = self._get_corpus_info_from_remote_path(remote_path)
+        params = {
+            'accountId': self.account_id,
+            'id': corpus.get("id")
+        }
+        response = requests.get(f'{self.host_url}/corpus/details', params=params)
+
+        if response.status_code != 200:
+            raise RuntimeError(
+                'cannot not get checksum of %s (response code %d)' % (remote_path, response.status_code))
+
+        list_of_one_object = response.json()
+        if "files" not in list_of_one_object or len(list_of_one_object["files"]) != 1:
+            raise RuntimeError(
+                'cannot not get checksum of %s (response badly formatted %s)' % (remote_path, response.content))
+        return list_of_one_object["files"][0].get("checksum")
+
+    def _get_checksum_file_safe(self, remote_path, local_path):
+        file_checksum = self._get_checksum_from_database(remote_path)
+        with tempfile.NamedTemporaryFile(delete=False, mode="w") as tmpfile:
+            tmpfile.write(file_checksum)
+            shutil.move(tmpfile.name, local_path + ".tmp")
+
     def _check_existing_file(self, remote_path, local_path):
+        checksum_path = self._get_checksum_file(local_path)
+        if os.path.exists(local_path) and os.path.exists(checksum_path):
+            with open(checksum_path) as f:
+                checksum_from_file = f.read()
+            checksum_from_database = self._get_checksum_from_database(remote_path)
+            if checksum_from_database == checksum_from_file:
+                return True
+            LOGGER.debug('checksum has changed for file %s (%s/%s)', local_path,
+                         checksum_from_file, checksum_from_database)
+        else:
+            LOGGER.debug('Cannot find %s or %s', local_path, checksum_path)
         return False
 
     def stream_corpus_manager(self, remote_id, remote_format, buffer_size=1024):
@@ -273,13 +317,9 @@ class CMStorages(Storage):
             'id': corpus_id,
             'segments': segments,
         }
-        data = json.dumps(data)
-        with tempfile.NamedTemporaryFile(delete=False, mode="w") as tmpfile:
-            tmpfile.write(data)
 
-        command = f"http {self.host_url}/corpus/segment/add < {tmpfile.name}"
-        return_code = os.system(command)
-        if return_code != 0:
+        response = requests.post(f'{self.host_url}/corpus/segment/add', json=data)
+        if response.status_code != 200:
             raise ValueError(
                 "Cannot add segment '%s' in '%s'." % (segments, corpus_id))
         return True
