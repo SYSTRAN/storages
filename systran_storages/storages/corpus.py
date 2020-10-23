@@ -57,18 +57,16 @@ class CMStorages(Storage):
             raise RuntimeError(
                 'cannot not get %s (response code %d)' % (remote_path, response.status_code))
         if "multipart/mixed" not in response.headers.get("Content-Type"):
-            with tempfile.NamedTemporaryFile(delete=False) as tmpfile:
-                tmpfile.write(response.content)
-                shutil.move(tmpfile.name, local_path)
+            with open(local_path, "wb") as file_writer:
+                file_writer.write(response.content)
                 return
         multipart_data = decoder.MultipartDecoder.from_response(response)
         for part_index, part in enumerate(multipart_data.parts):
-            with tempfile.NamedTemporaryFile(delete=False) as tmpfile:
-                tmpfile.write(part.content)
-                if part_index == 0:
-                    shutil.move(tmpfile.name, local_path + "." + corpus.get("sourceLanguage"))
-                else:
-                    shutil.move(tmpfile.name, local_path + "." + corpus.get("targetLanguages")[0])
+            filename = local_path + "." + corpus.get("sourceLanguage")
+            if part_index == 1:
+                filename = local_path + "." + corpus.get("targetLanguages")[0]
+            with open(filename, "wb") as file_writer:
+                file_writer.write(part.content)
 
     def _get_checksum_from_database(self, remote_path):
         corpus = self._get_corpus_info_from_remote_path(remote_path)
@@ -90,9 +88,8 @@ class CMStorages(Storage):
 
     def _get_checksum_file_safe(self, remote_path, local_path):
         file_checksum = self._get_checksum_from_database(remote_path)
-        with tempfile.NamedTemporaryFile(delete=False, mode="w") as tmpfile:
-            tmpfile.write(file_checksum)
-            shutil.move(tmpfile.name, local_path + ".tmp")
+        with open(local_path + ".tmp", "w") as file_writer:
+            file_writer.write(file_checksum)
 
     def _alias_files_exist(self, local_path):
         dirname = os.path.dirname(local_path)
