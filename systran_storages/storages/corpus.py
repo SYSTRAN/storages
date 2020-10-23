@@ -51,7 +51,7 @@ class CMStorages(Storage):
             'format': "text/monolingual"
         }
 
-        response = requests.get(f'{self.host_url}/corpus/export', params=params)
+        response = requests.get(self.host_url + '/corpus/export', params=params)
 
         if response.status_code != 200:
             raise RuntimeError(
@@ -76,7 +76,7 @@ class CMStorages(Storage):
             'accountId': self.account_id,
             'id': corpus.get("id")
         }
-        response = requests.get(f'{self.host_url}/corpus/details', params=params)
+        response = requests.get(self.host_url + '/corpus/details', params=params)
 
         if response.status_code != 200:
             raise RuntimeError(
@@ -130,7 +130,7 @@ class CMStorages(Storage):
             ('format', remote_format),
         )
 
-        response = requests.get(f'{self.host_url}/corpus/export', params=params)
+        response = requests.get(self.host_url + '/corpus/export', params=params)
         if response.status_code != 200:
             raise RuntimeError(
                 'cannot get %s (response code %d)' % response.status_code)
@@ -156,7 +156,7 @@ class CMStorages(Storage):
                 'cannot push %s, only support format of the corpus (application/x-tmx+xml, '
                 'text/bitext)' % local_path)
 
-        remote_path = f"/{self.root_folder}/" + remote_path + os.path.basename(local_path)
+        remote_path = '/' + self.root_folder + '/' + remote_path + os.path.basename(local_path)
         files = {
             'filename': (None, remote_path),
             'accountId': (None, self.account_id),
@@ -166,7 +166,7 @@ class CMStorages(Storage):
             'data': (None, user_data)
         }
 
-        response = requests.post(f'{self.host_url}/corpus/import', files=files)
+        response = requests.post(self.host_url + '/corpus/import', files=files)
         if response.status_code != 200:
             raise RuntimeError(
                 'cannot push %s (response code %d)' % (remote_path, response.status_code))
@@ -188,7 +188,7 @@ class CMStorages(Storage):
                 'accountId': self.account_id
             }
 
-        response = requests.get(f'{self.host_url}/corpus/list', params=data)
+        response = requests.get(self.host_url + '/corpus/list', params=data)
 
         list_objects = response.json()
         if 'directories' in list_objects:
@@ -233,7 +233,7 @@ class CMStorages(Storage):
             ('id', corpus_id),
         )
 
-        response = requests.get(f'{self.host_url}/corpus/delete', params=params)
+        response = requests.get(self.host_url + '/corpus/delete', params=params)
         if response.status_code != 200:
             raise RuntimeError(
                 'cannot delete %s (response code %d)' % response.status_code)
@@ -245,13 +245,13 @@ class CMStorages(Storage):
             'prefix': self._create_path_from_root(remote_path),
             'accountId': self.account_id
         }
-        response = requests.get(f'{self.host_url}/corpus/list', data=data)
+        response = requests.get(self.host_url + '/corpus/list', data=data)
         list_objects = response.json()
         if "files" in list_objects:
             for key in list_objects["files"]:
                 if self._create_path_from_root(remote_path) == key.get("filename"):
                     return key
-        raise ValueError(f"corpus not found from remote_path: {remote_path}")
+        raise ValueError("corpus not found from remote_path: " + remote_path)
 
     def rename(self, old_remote_path, new_remote_path):
         raise NotImplementedError()
@@ -275,7 +275,7 @@ class CMStorages(Storage):
         if search_query['target']['keyword']:
             data['search']['tgtQuery'] = search_query['target']['keyword']
 
-        response = requests.post(f'{self.host_url}/corpus/segment/list', json=data, params=params)
+        response = requests.post(self.host_url + '/corpus/segment/list', json=data, params=params)
         if response.status_code != 200:
             raise ValueError("Cannot list segment '%s' in '%s'." % (search_query, remote_ids))
         list_segment = response.json()
@@ -295,7 +295,7 @@ class CMStorages(Storage):
                 'id': corpus_id,
                 'segId': seg_id,
             }
-            response = requests.post(f'{self.host_url}/corpus/segment/delete', data=params)
+            response = requests.post(self.host_url + '/corpus/segment/delete', data=params)
             if response.status_code == 200:
                 deleted_seg += response.json()["segmentDeleted"]
             else:
@@ -313,7 +313,7 @@ class CMStorages(Storage):
             'srcSeg': src_seg,
         }
 
-        response = requests.post(f'{self.host_url}/corpus/segment/modify', data=params)
+        response = requests.post(self.host_url + '/corpus/segment/modify', data=params)
         if response.status_code != 200:
             raise ValueError(
                 "Cannot modify segment '%s' in '%s'." % (seg_id, corpus_id))
@@ -327,7 +327,7 @@ class CMStorages(Storage):
             'segments': segments,
         }
 
-        response = requests.post(f'{self.host_url}/corpus/segment/add', json=data)
+        response = requests.post(self.host_url + '/corpus/segment/add', json=data)
         if response.status_code != 200:
             raise ValueError(
                 "Cannot add segment '%s' in '%s'." % (segments, corpus_id))
@@ -341,7 +341,7 @@ class CMStorages(Storage):
             full_path_to_check = full_path_to_check[1:]
         directoryArray = full_path_to_check.split("/")
         if len(directoryArray) == 0:
-            raise ValueError(f"Bad remote_path: {remote_path}")
+            raise ValueError("Bad remote_path: " + remote_path)
         if len(directoryArray) == 1 and directoryArray[0] == '':
             return True
         else:
@@ -350,7 +350,7 @@ class CMStorages(Storage):
                 'directory': parentDirectory,
                 'accountId': self.account_id
             }
-            response = requests.get(f'{self.host_url}/corpus/list', params=data)
+            response = requests.get(self.host_url + '/corpus/list', params=data)
             if "directories" in response.json():
                 if directoryArray[-1] in response.json()["directories"]:
                     return True
@@ -363,7 +363,7 @@ class CMStorages(Storage):
             'filename': self._create_path_from_root(remote_path),
             'accountId': self.account_id
         }
-        response = requests.get(f'{self.host_url}/corpus/exists', params=data)
+        response = requests.get(self.host_url + '/corpus/exists', params=data)
         return response.status_code == 200 and "true" in str(response.content)
 
     def push_file(self, local_path, remote_path):
@@ -372,7 +372,7 @@ class CMStorages(Storage):
             'accountId': self.account_id
         }
 
-        response = requests.get(f'{self.host_url}/corpus/exists', params=data)
+        response = requests.get(self.host_url + '/corpus/exists', params=data)
         if response.status_code == 200 and "true" in str(response.content):
             raise RuntimeError("Cannot push file: %s already exists"
                                % remote_path)
@@ -396,7 +396,7 @@ class CMStorages(Storage):
                     ('corpus', data)
                 ]
             )
-            response = requests.post(f'{self.host_url}/corpus/import', data=mp_encoder,
+            response = requests.post(self.host_url + '/corpus/import', data=mp_encoder,
                                      headers={'Content-Type': mp_encoder.content_type})
             if response.status_code != 200:
                 raise ValueError(
