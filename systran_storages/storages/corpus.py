@@ -39,7 +39,7 @@ class CMStorages(Storage):
         self._get_checksum_file_safe(remote_path, local_path)
 
     def _get_checksum_file(self, local_path):
-        if not local_path.endswith(".txt") or not local_path.endswith(".tmx"):
+        if not local_path.endswith(".txt") and not local_path.endswith(".tmx"):
             local_path = local_path[:-3]
         return local_path + ".tmp"
 
@@ -94,9 +94,18 @@ class CMStorages(Storage):
             tmpfile.write(file_checksum)
             shutil.move(tmpfile.name, local_path + ".tmp")
 
+    def _alias_files_exist(self, local_path):
+        dirname = os.path.dirname(local_path)
+        number_of_files = 0
+        for filename in os.listdir(dirname):
+            complete_filename = os.path.join(dirname, filename)
+            if complete_filename.startswith(local_path) and len(complete_filename) == len(local_path) + 3:
+                number_of_files += 1
+        return number_of_files == 2
+
     def _check_existing_file(self, remote_path, local_path):
         checksum_path = self._get_checksum_file(local_path)
-        if os.path.exists(local_path) and os.path.exists(checksum_path):
+        if self._alias_files_exist(local_path) and os.path.exists(checksum_path):
             with open(checksum_path) as f:
                 checksum_from_file = f.read()
             checksum_from_database = self._get_checksum_from_database(remote_path)
