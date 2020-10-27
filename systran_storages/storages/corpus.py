@@ -62,9 +62,11 @@ class CMStorages(Storage):
                 return
         multipart_data = decoder.MultipartDecoder.from_response(response)
         for part_index, part in enumerate(multipart_data.parts):
-            filename = local_path + "." + corpus.get("sourceLanguage")
-            if part_index == 1:
-                filename = local_path + "." + corpus.get("targetLanguages")[0]
+            filename = local_path
+            if local_path.endswith('.tmx') or local_path.endswith('.txt'):
+                filename += "." + corpus.get("sourceLanguage")
+                if part_index == 1:
+                    filename += "." + corpus.get("targetLanguages")[0]
             with open(filename, "wb") as file_writer:
                 file_writer.write(part.content)
 
@@ -407,6 +409,15 @@ class CMStorages(Storage):
             return_value += '/' + self.path_without_starting_slash(remote_path)
         if return_value is '':
             return '/'
+        if return_value.endswith('.tmx') or return_value.endswith('.txt') or return_value.endswith('/'):
+            return return_value
+        p = return_value.rfind('.tmx.')
+        corpus_format = '.tmx'
+        if return_value.rfind('.txt.') > p:
+            p = return_value.rfind('.txt.')
+            corpus_format = '.txt'
+        if p > -1:
+            return return_value[0:p+len(corpus_format)]
         return return_value
 
     def _internal_path(self, remote_path):
