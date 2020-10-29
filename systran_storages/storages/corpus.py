@@ -64,9 +64,10 @@ class CMStorages(Storage):
         for part_index, part in enumerate(multipart_data.parts):
             filename = local_path
             if local_path.endswith('.tmx') or local_path.endswith('.txt'):
-                filename += "." + corpus.get("sourceLanguage")
                 if part_index == 1:
                     filename += "." + corpus.get("targetLanguages")[0]
+                else:
+                    filename += "." + corpus.get("sourceLanguage")
             with open(filename, "wb") as file_writer:
                 file_writer.write(part.content)
 
