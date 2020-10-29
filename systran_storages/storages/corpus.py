@@ -5,6 +5,7 @@ import logging
 import shutil
 import tempfile
 import os
+import uuid
 
 import requests
 from requests_toolbelt.multipart.encoder import MultipartEncoder
@@ -91,7 +92,11 @@ class CMStorages(Storage):
         if "files" not in list_of_one_object or len(list_of_one_object["files"]) != 1:
             raise RuntimeError(
                 'cannot not get checksum of %s (response badly formatted %s)' % (remote_path, response.content))
-        return list_of_one_object["files"][0].get("checksum")
+        file_checksum = list_of_one_object["files"][0].get("checksum")
+        if file_checksum is None or file_checksum == "":
+            LOGGER.warning("checksum was not part of the current corpus, generating random one")
+            file_checksum = str(uuid.uuid1())
+        return file_checksum
 
     def _get_checksum_file_safe(self, remote_path, local_path):
         file_checksum = self._get_checksum_from_database(remote_path)
