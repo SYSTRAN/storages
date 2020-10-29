@@ -38,10 +38,14 @@ class CMStorages(Storage):
         self._get_main_file_safe(remote_path, local_path)
         self._get_checksum_file_safe(remote_path, local_path)
 
+    def _get_checksum_file_name(self, local_path):
+        (local_dir, basename) = os.path.split(local_path)
+        return os.path.join(local_dir, "." + basename + ".md5")
+
     def _get_checksum_file(self, local_path):
         if not local_path.endswith(".txt") and not local_path.endswith(".tmx"):
             local_path = local_path[:-3]
-        return local_path + ".tmp"
+        return self._get_checksum_file_name(local_path)
 
     def _get_main_file_safe(self, remote_path, local_path):
         corpus = self._get_corpus_info_from_remote_path(remote_path)
@@ -91,7 +95,7 @@ class CMStorages(Storage):
 
     def _get_checksum_file_safe(self, remote_path, local_path):
         file_checksum = self._get_checksum_from_database(remote_path)
-        with open(local_path + ".tmp", "w") as file_writer:
+        with open(self._get_checksum_file_name(local_path), "w") as file_writer:
             file_writer.write(file_checksum)
 
     def _alias_files_exist(self, local_path):
