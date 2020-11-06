@@ -107,6 +107,8 @@ class Storage(object):
         if not os.path.isdir(local_path):
             os.makedirs(local_path)
         with lock(local_path):
+            if check_integrity_fn is not None and check_integrity_fn(local_path):
+                return
             allfiles = {}
             for root, dirs, files in os.walk(local_path):
                 if os.path.basename(root) == _META_SUBDIR:
