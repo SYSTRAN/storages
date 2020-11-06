@@ -100,47 +100,52 @@ class Storage(object):
         if directory is False:
             directory = self.isdir(remote_path)
 
-        if directory:
-            if not os.path.isdir(local_path):
-                os.makedirs(local_path)
-            with lock(local_path):
-                allfiles = {}
-                for root, dirs, files in os.walk(local_path):
-                    if os.path.basename(root) == _META_SUBDIR:
-                        continue
-                    for f in files:
-                        allfiles[os.path.join(root, f)] = 1
-
-                list_remote_files = self.listdir(remote_path, recursive=True)
-                for f in list_remote_files:
-                    internal_path = self._internal_path(f)
-                    norm_path = os.path.normpath(remote_path)
-                    assert internal_path.startswith(norm_path)
-                    subpath = internal_path[len(norm_path) + 1:]
-                    path = os.path.join(local_path, subpath)
-                    if f.endswith('/'):
-                        if not os.path.isdir(path):
-                            os.makedirs(path)
-                    else:
-                        dir_path = os.path.dirname(path)
-                        if not os.path.isdir(dir_path):
-                            os.makedirs(dir_path)
-                        if path in allfiles:
-                            del allfiles[path]
-                            checksum_file = self._get_checksum_file(path)
-                            if checksum_file is not None and checksum_file in allfiles:
-                                del allfiles[checksum_file]
-                        self._sync_file(internal_path, path)
-                for f in allfiles:
-                    os.remove(f)
-                if check_integrity_fn is not None and not check_integrity_fn(local_path):
-                    try:
-                        shutil.rmtree(local_path)
-                    except:
-                        pass
-                    raise RuntimeError('integrity check failed on %s' % local_path)
-        else:
+        if not directory:
             self._sync_file(remote_path, local_path)
+            return
+
+        if not os.path.isdir(local_path):
+            os.makedirs(local_path)
+        with lock(local_path):
+            if check_integrity_fn is not None and check_integrity_fn(local_path):
+                LOGGER.info('Integrity check is successful for local directory: %s', local_path)
+                return
+            LOGGER.info('Continue to synchronize : %s', local_path)
+            allfiles = {}
+            for root, dirs, files in os.walk(local_path):
+                if os.path.basename(root) == _META_SUBDIR:
+                    continue
+                for f in files:
+                    allfiles[os.path.join(root, f)] = 1
+
+            list_remote_files = self.listdir(remote_path, recursive=True)
+            for f in list_remote_files:
+                internal_path = self._internal_path(f)
+                norm_path = os.path.normpath(remote_path)
+                assert internal_path.startswith(norm_path)
+                subpath = internal_path[len(norm_path) + 1:]
+                path = os.path.join(local_path, subpath)
+                if f.endswith('/'):
+                    if not os.path.isdir(path):
+                        os.makedirs(path)
+                else:
+                    dir_path = os.path.dirname(path)
+                    if not os.path.isdir(dir_path):
+                        os.makedirs(dir_path)
+                    if path in allfiles:
+                        del allfiles[path]
+                        checksum_file = self._get_checksum_file(path)
+                        if checksum_file is not None and checksum_file in allfiles:
+                            del allfiles[checksum_file]
+                    self._sync_file(internal_path, path)
+            for f in allfiles:
+                os.remove(f)
+            if check_integrity_fn is not None and not check_integrity_fn(local_path):
+                try:
+                    shutil.rmtree(local_path)
+                except:
+                    pass
+                raise RuntimeError('integrity check failed on %s' % local_path)
 
     @abc.abstractmethod
     def stream(self, remote_path, buffer_size=1024):
