@@ -53,9 +53,9 @@ class SwiftStorage(Storage):
             local_stat = os.stat(local_path)
             for r in results:
                 if r['success']:
-                    if r['headers']['content-length'] != local_stat.st_size:
+                    if int(r['headers']['content-length']) != local_stat.st_size:
                         return False
-                    timestamp = r["headers"]["x-timestamp"]
+                    timestamp = float(r["headers"]["x-timestamp"])
                     if int(local_stat.st_mtime) == int(timestamp):
                         return True
         else:
