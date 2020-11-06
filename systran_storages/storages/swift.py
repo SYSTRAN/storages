@@ -59,7 +59,7 @@ class SwiftStorage(Storage):
                     if int(local_stat.st_mtime) == int(timestamp):
                         return True
         else:
-            LOGGER.debug('Cannot find %s or %s', local_path)
+            LOGGER.debug('Cannot find %s', local_path)
         return False
 
     def stat(self, remote_path):

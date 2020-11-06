@@ -108,7 +108,9 @@ class Storage(object):
             os.makedirs(local_path)
         with lock(local_path):
             if check_integrity_fn is not None and check_integrity_fn(local_path):
+                LOGGER.info('Integrity check is successful for local directory: %s', local_path)
                 return
+            LOGGER.info('Continue to synchronize : %s', local_path)
             allfiles = {}
             for root, dirs, files in os.walk(local_path):
                 if os.path.basename(root) == _META_SUBDIR:
