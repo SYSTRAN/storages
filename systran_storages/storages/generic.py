@@ -181,7 +181,7 @@ class Storage(object):
             dirname = os.path.dirname(remote_path)
             self.mkdir(dirname)
             LOGGER.info('Uploading file %s to %s', local_path, remote_path)
-            self.push_file(local_path, remote_path)
+            return self.push_file(local_path, remote_path)
         else:
             def push_rec(local_path, remote_path):
                 files = os.listdir(local_path)
@@ -191,11 +191,11 @@ class Storage(object):
                     local_filepath = os.path.join(local_path, f)
                     remote_filepath = os.path.join(remote_path, f)
                     if os.path.isdir(local_filepath):
-                        push_rec(local_filepath, remote_filepath)
+                        return push_rec(local_filepath, remote_filepath)
                     else:
-                        self.push(local_filepath, remote_filepath)
+                        return self.push(local_filepath, remote_filepath)
 
-            push_rec(local_path, remote_path)
+            return push_rec(local_path, remote_path)
 
     def push_corpus_manager(self, local_path, remote_path, corpus_id, user_data):
         """Push a file on a storage with only Corpus Manager storage
