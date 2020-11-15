@@ -173,7 +173,9 @@ class StorageClient(object):
             return
         LOGGER.info('Uploading %s to %s', local_path, remote_path)
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
-        client.push(local_path, remote_path)
+        push_infos = client.push(local_path, remote_path)
+        if push_infos is not None:
+            return push_infos
 
     def push_corpus_manager(self, local_path, remote_path, corpus_id, user_data, storage_id=None):
         """Pushes a local_path file or directory to storage."""
