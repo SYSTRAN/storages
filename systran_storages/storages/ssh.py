@@ -113,7 +113,7 @@ class RemoteStorage(Storage):
         client = self._connectSCPClient()
         channel = client._open()
         channel.settimeout(client.socket_timeout)
-        channel.exec_command("scp -f " + client.sanitize(scp.asbytes(remote_path)))  # nosec
+        channel.exec_command(b"scp -f " + client.sanitize(scp.asbytes(remote_path)))  # nosec
         while not channel.closed:
             # wait for command as long as we're open
             channel.sendall('\x00')
@@ -124,7 +124,7 @@ class RemoteStorage(Storage):
             msg = msg[:-1]
             code = msg[0:1]
             # recv file
-            if code == "C":
+            if code == b"C":
                 cmd = msg[1:]
                 parts = cmd.strip().split(b' ', 2)
                 size = int(parts[1])

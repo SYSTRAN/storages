@@ -116,18 +116,29 @@ class S3Storage(Storage):
         delimiter = '/'
         if recursive:
             delimiter = ''
-        list_objects = self._s3.meta.client.list_objects_v2(Bucket=self._bucket_name,
-                                                            Delimiter=delimiter,
-                                                            Prefix=remote_path)
-        if 'CommonPrefixes' in list_objects:
-            for key in list_objects['CommonPrefixes']:
-                listdir[key['Prefix']] = {'is_dir': True}
-        if 'Contents' in list_objects:
-            for key in list_objects['Contents']:
-                listdir[key['Key']] = {'size': key['Size'],
-                                       'last_modified': datetime_to_timestamp(key['LastModified'])}
-                if key['Key'].endswith('/'):
-                    listdir[key['Key']]['is_dir'] = True
+
+        list_objects_args={
+            'Bucket': self._bucket_name,
+            'Delimiter': delimiter,
+            'Prefix': remote_path
+        }
+
+        while True:
+            list_objects = self._s3.meta.client.list_objects_v2(**list_objects_args)
+            if 'CommonPrefixes' in list_objects:
+                for key in list_objects['CommonPrefixes']:
+                    listdir[key['Prefix']] = {'is_dir': True}
+            if 'Contents' in list_objects:
+                for key in list_objects['Contents']:
+                    listdir[key['Key']] = {'size': key['Size'],
+                                           'last_modified': datetime_to_timestamp(key['LastModified']),
+                                           'etag': key['ETag']}
+                    if key['Key'].endswith('/'):
+                        listdir[key['Key']]['is_dir'] = True
+            if 'NextContinuationToken' not in list_objects:
+                break
+            list_objects_args['ContinuationToken'] = list_objects['NextContinuationToken']
+
         return listdir
 
     def mkdir(self, remote_path):

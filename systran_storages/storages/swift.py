@@ -68,8 +68,9 @@ class SwiftStorage(Storage):
             for r in results:
                 if r['success']:
                     return {'is_dir': False,
-                            'size': r['headers']['content-length'],
-                            'last_modified': r['headers']['x-timestamp']}
+                            'size': int(r['headers']['content-length']),
+                            'last_modified': float(r['headers']['x-timestamp']),
+                            'etag': r['headers']['etag']}
             remote_path += '/'
         results = self._client.list(container=self._container, options={"prefix": remote_path,
                                                                         "delimiter": "/"})
