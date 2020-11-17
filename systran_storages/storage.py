@@ -1,5 +1,4 @@
 """Client to abstract storage location: local, S3, SSH, etc."""
-import abc
 import os
 import logging
 
@@ -28,7 +27,6 @@ class StorageClient(object):
         fields = path.split(':')
         return len(fields) == 2 and fields[0] in self._config
 
-    @abc.abstractmethod
     def parse_managed_path(self, path):
         """Returns the storage ID and the full path from a managed path."""
         fields = path.split(':')
@@ -189,8 +187,7 @@ class StorageClient(object):
         """Pushes a local_path file or directory to storage."""
         LOGGER.info('mkdir %s to %s', local_path, remote_path)
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
-        # Remove antislash from first and lasf
-        # t character
+        # Remove antislash from first and last character
         if local_path.startswith("/"):
             local_path = local_path[1:]
         if local_path.endswith("/"):
