@@ -165,7 +165,6 @@ class Storage(object):
         """
         raise NotImplementedError()
 
-    @abc.abstractmethod
     def stream_corpus_manager(self, remote_id, remote_format, buffer_size=1024):
         """return a generator on a remote file for Corpus Manager storage
         """
