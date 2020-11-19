@@ -29,6 +29,7 @@ setup(
         'requests',
         'scp',
         'python-swiftclient',
-        'python-keystoneclient'
+        'python-keystoneclient',
+        'requests_toolbelt'
     ]
 )
