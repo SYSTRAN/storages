@@ -195,11 +195,11 @@ class Storage(object):
                     local_filepath = os.path.join(local_path, f)
                     remote_filepath = os.path.join(remote_path, f)
                     if os.path.isdir(local_filepath):
-                        return push_rec(local_filepath, remote_filepath)
+                        push_rec(local_filepath, remote_filepath)
                     else:
-                        return self.push(local_filepath, remote_filepath)
+                        self.push(local_filepath, remote_filepath)
 
-            return push_rec(local_path, remote_path)
+            push_rec(local_path, remote_path)
 
     def push_corpus_manager(self, local_path, remote_path, corpus_id, user_data):
         """Push a file on a storage with only Corpus Manager storage
