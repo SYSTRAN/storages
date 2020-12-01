@@ -290,6 +290,13 @@ def test_storages(request, tmpdir, storages, storage_id):
                                      storage_id=storage_id)
 
 
+def test_path_join():
+    config = {"local": {"type": "local", "basedir": "/tmp"}}
+    client = systran_storages.StorageClient(config)
+    assert client.join("local:dir/", "file.txt") == "local:dir/file.txt"
+    assert client.split("local:dir/file.txt") == ("local:", "dir", "file.txt")
+
+
 def test_is_managed_path():
     config = {"s3_models": {}, "s3_test": {}, "launcher": {}}
     client = systran_storages.StorageClient(config=config)
