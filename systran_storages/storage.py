@@ -98,18 +98,19 @@ class StorageClient(object):
 
     def join(self, path, *paths):
         """Joins the paths according to the storage implementation."""
-        client, rel_path = self._get_storage(path)
-
-        if rel_path == path:
-            return client.join(path, *paths)
-
-        prefix, _ = path.split(':')
+        if not self.is_managed_path(path):
+            return os.path.join(path, *paths)
+        client, _ = self._get_storage(path)
+        prefix, rel_path = self.parse_managed_path(path)
         return '%s:%s' % (prefix, client.join(rel_path, *paths))  # Only join the actual path.
 
     def split(self, path):
         """Splits the path according to the storage implementation."""
-        client, path = self._get_storage(path)
-        return client.split(path)
+        if not self.is_managed_path(path):
+            return os.path.split(path)
+        client, _ = self._get_storage(path)
+        prefix, rel_path = self.parse_managed_path(path)
+        return ("%s:" % prefix,) + client.split(rel_path)
 
     # Simple wrappers around get().
     def get_file(self, remote_path, local_path, storage_id=None):
