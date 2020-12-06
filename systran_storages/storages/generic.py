@@ -288,7 +288,7 @@ class Storage(object):
         """
         return path
 
-    def search(self, remote_ids, request_search, nb_skip, nb_returns):
+    def search(self, remote_ids, search_query, nb_skip, nb_limit):
         """list corpus segments identified by corpus id
         """
         raise NotImplementedError()

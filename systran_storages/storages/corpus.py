@@ -233,8 +233,10 @@ class CMStorages(Storage):
         return listdir
 
     def _delete_single(self, remote_path, isdir):
-        corpus = self._get_corpus_info_from_remote_path(remote_path)
-        self.delete_corpus_manager(corpus.get("id"))
+        # CM only support delete file, folder does not really exist
+        if not isdir:
+            corpus = self._get_corpus_info_from_remote_path(remote_path)
+            self.delete_corpus_manager(corpus.get("id"))
 
     def delete_corpus_manager(self, corpus_id):
         params = (
@@ -268,33 +270,37 @@ class CMStorages(Storage):
     def mkdir(self, remote_path):
         return True
 
-    def search(self, remote_ids, search_query, nb_skip, nb_returns):
+    def search(self, remote_ids, search_query=None, nb_skip=0, nb_limit=0):
         params = {
             'skip': int(nb_skip),
-            'limit': int(nb_returns)
-        }
-        data = {
+            'limit': int(nb_limit),
             'accountId': self.account_id,
-            'ids': remote_ids,
-            'search': {}
         }
 
-        if search_query['source']['keyword']:
-            data['search']['srcQuery'] = search_query['source']['keyword']
-        if search_query['target']['keyword']:
-            data['search']['tgtQuery'] = search_query['target']['keyword']
+        data = None
+        if search_query:
+            data = {
+                'ids': remote_ids,
+                'search': {}
+            }
+            if search_query.get('source') and search_query['source'].get('keyword'):
+                data['search']['srcQuery'] = search_query['source']['keyword']
+            if search_query.get('target') and search_query['target'].get('keyword'):
+                data['search']['tgtQuery'] = search_query['target']['keyword']
+        else:
+            params['id'] = remote_ids[0]
 
         response = requests.post(self.host_url + '/corpus/segment/list', json=data, params=params)
         if response.status_code != 200:
             raise ValueError("Cannot list segment '%s' in '%s'." % (search_query, remote_ids))
         list_segment = response.json()
-        for segment in list_segment["segments"]:
-            for corpus in segment["corpus"]:
-                corpus["filename"] = corpus["filename"].replace("/" + self.root_folder, "")
+        for segment in list_segment.get("segments"):
+            if segment.get("corpus"):
+                for corpus in segment["corpus"]:
+                    corpus["filename"] = corpus["filename"].replace("/" + self.root_folder, "")
         if "error" in list_segment:
-            raise ValueError("Cannot list segment '%s' in '%s'." % (remote_ids,
-                                                                    list_segment['error']))
-        return list_segment['segments'], list_segment['total']
+            raise ValueError("Cannot list segment '%s' in '%s'." % (remote_ids, list_segment['error']))
+        return list_segment.get("segments"), list_segment.get('total')
 
     def seg_delete(self, corpus_id, list_seg_id):
         deleted_seg = 0
