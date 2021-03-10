@@ -154,7 +154,7 @@ class SwiftStorage(Storage):
                 raise RuntimeError("Cannot delete file [%s]: NO RESULT" % remote_path)
 
     def rename(self, old_remote_path, new_remote_path):
-        listfiles = self.listdir(old_remote_path, True)
+        listfiles = self.listdir(old_remote_path, True, not self.isdir(old_remote_path))
         for f in listfiles:
             assert f[:len(old_remote_path)] == old_remote_path, "inconsistent listdir result"
             obj = SwiftCopyObject(f, {"destination": "/%s/%s%s" % (self._container, new_remote_path,
