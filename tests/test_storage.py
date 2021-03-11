@@ -69,6 +69,12 @@ def test_storage_manager(tmpdir):
             "type": "http",
             "get_pattern": "hereget/%s",
             "post_pattern": "herepost/%s"
+        },
+        "corpus_manager": {
+            "account_id": "",
+            "type": "systran_corpusmanager",
+            "description": "CorpusManager file storage",
+            "host_url": "localhost:8889"
         }
     }
     storages = systran_storages.StorageClient(config=config)
@@ -86,6 +92,11 @@ def test_storage_manager(tmpdir):
 
     http_storage, path = storages._get_storage("launcher:/hereget/mysupermodel")
     assert isinstance(http_storage, systran_storages.storages.HTTPStorage)
+
+    cm_storage, path = storages._get_storage("corpus_manager:pathdir/mysupermodel")
+    assert isinstance(cm_storage, systran_storages.storages.CMStorages)
+    assert cm_storage._storage_id == "corpus_manager"
+
     with pytest.raises(ValueError):
         storages._get_storage("unknown:/hereget/mysupermodel")
 
