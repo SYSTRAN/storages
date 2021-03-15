@@ -17,6 +17,14 @@ from systran_storages.storages.utils import datetime_to_timestamp
 LOGGER = logging.getLogger(__name__)
 
 
+def add_suffix(file_name, to_add):
+    parts = file_name.split('.')
+    name = parts[0] + to_add
+    for part in parts[1:]:
+        name = name + '.' + part
+    return name
+
+
 class CMStorages(Storage):
     """Corpus Manager storage."""
 
@@ -421,6 +429,33 @@ class CMStorages(Storage):
                 raise ValueError(
                     "Cannot import file '%s' in '%s'." % (local_path, remote_path))
             return response.json()
+
+    def partition_auto(self, data, training_path, testing_path):
+        remote_path = training_path + data.filename
+        temp_files = tempfile.mkdtemp()
+        data.save(os.path.join(temp_files, data.filename))
+        local_path = os.path.join(temp_files, data.filename)
+        response_push = self.push_file(local_path, remote_path)
+        corpus_id = response_push["id"]
+        training_file = training_path + add_suffix(data.filename, '_train')
+        testing_file = testing_path + add_suffix(data.filename, '_test')
+        data_partition = {
+                'accountId': self.account_id,
+                'id': corpus_id,
+                'noRandom': False,
+                'usePercentage': True,
+                'partition': [
+                    {'segments': '90', 'filename': training_file},
+                    {'segments': '10', 'filename': testing_file}
+                ],
+            }
+
+        response_partition = requests.post(self.host_url + '/corpus/partition', data=json.dumps(data_partition))
+        if response_partition.status_code != 200:
+            raise ValueError(
+                "Cannot partition file '%s' in '%s' and '%s'." % (local_path, training_path, testing_path))
+        self.delete_corpus_manager(corpus_id)
+        return response_partition.json()
 
     def _create_path_from_root(self, remote_path):
         return_value = ''
