@@ -256,33 +256,36 @@ def test_storages(request, tmpdir, storages, storage_id):
     # checking ls
     lsdir = sorted(storage_client.listdir(os.path.join("myremotedirectory/"),
                                           storage_id=storage_id))
-    assert lsdir == ['myremotedirectory/europarl-v7.de-en.10K.tok.de',
-                     'myremotedirectory/test/',
-                     'myremotedirectory/vocab-2/']
+    assert {'myremotedirectory/europarl-v7.de-en.10K.tok.de',
+            'myremotedirectory/test/',
+            'myremotedirectory/vocab-2/'}.issubset(set(lsdir))
     # checking ls
     lsdir = sorted(storage_client.listdir(os.path.join("myremotedirectory/"),
                                           recursive=True,
                                           storage_id=storage_id))
-    assert lsdir == ['myremotedirectory/europarl-v7.de-en.10K.tok.de',
-                     'myremotedirectory/test/copy2-europarl-v7.de-en.10K.tok.de',
-                     'myremotedirectory/vocab-2/de-vocab.txt']
+    assert {'myremotedirectory/europarl-v7.de-en.10K.tok.de',
+            'myremotedirectory/test/copy2-europarl-v7.de-en.10K.tok.de',
+            'myremotedirectory/vocab-2/de-vocab.txt'}.issubset(set(lsdir))
     # getting directory back
     with pytest.raises(Exception):
         storage_client.get(os.path.join("myremotedirectory"),
-                           os.path.join(stor_tmp_dir),
+                           os.path.join(stor_tmp_dir, "myremotedirectory"),
+                           directory=None,
                            storage_id=storage_id)
     storage_client.get(os.path.join("myremotedirectory"),
                        os.path.join(stor_tmp_dir, "myremotedirectory"),
                        directory=True,
                        storage_id=storage_id)
     storage_client.get(os.path.join("myremotedirectory"),
-                       os.path.join(stor_tmp_dir, "myremotedirectory"),
-                       directory=None,
+                       os.path.join(stor_tmp_dir),
                        storage_id=storage_id)
     local_listdir = sorted([f for f in os.listdir(os.path.join(stor_tmp_dir, "myremotedirectory"))
                             if not f.endswith('#md5')])
     # deleting full directory
     storage_client.delete(os.path.join("myremotedirectory"),
+                          recursive=True,
+                          storage_id=storage_id)
+    storage_client.delete(os.path.join("myremotedirectory-new"),
                           recursive=True,
                           storage_id=storage_id)
     # checking directory is not there anymore

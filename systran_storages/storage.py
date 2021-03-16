@@ -1,5 +1,4 @@
 """Client to abstract storage location: local, S3, SSH, etc."""
-
 import os
 import logging
 
@@ -41,7 +40,7 @@ class StorageClient(object):
             fields = path.split(':')
             if len(fields) > 2:
                 raise ValueError('invalid path format: %s' % path)
-            elif len(fields) == 2:
+            if len(fields) == 2:
                 storage_id = fields[0]
                 path = fields[1]
 
@@ -81,6 +80,12 @@ class StorageClient(object):
                         config['get_pattern'],
                         pattern_push=config.get('post_pattern'),
                         pattern_list=config.get('list_pattern'))
+                elif config['type'] == 'systran_corpusmanager':
+                    client = storages.CMStorages(
+                        storage_id,
+                        config.get('host_url'),
+                        account_id=config.get('account_id'),
+                        root_folder=config.get('root_folder'))
                 elif config['type'] == 'local':
                     client = storages.LocalStorage(
                         storage_id,
@@ -151,6 +156,14 @@ class StorageClient(object):
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
         return client.stream(remote_path, buffer_size)
 
+    def stream_corpus_manager(self, remote_path, remote_id, remote_format,
+                              buffer_size=1024, storage_id=None):
+        """Returns a generator to stream a remote_path file for Corpus Manager storage.
+        `buffer_size` is the maximal size of each chunk
+        """
+        client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
+        return client.stream_corpus_manager(remote_id, remote_format, buffer_size)
+
     def push(self, local_path, remote_path, storage_id=None):
         """Pushes a local_path file or directory to storage."""
         if not os.path.exists(local_path):
@@ -159,7 +172,17 @@ class StorageClient(object):
             return
         LOGGER.info('Uploading %s to %s', local_path, remote_path)
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
-        client.push(local_path, remote_path)
+        return client.push(local_path, remote_path)
+
+    def push_corpus_manager(self, local_path, remote_path, corpus_id, user_data, storage_id=None):
+        """Pushes a local_path file or directory to storage."""
+        if not os.path.exists(local_path):
+            raise RuntimeError('%s not found' % local_path)
+        if local_path == remote_path:
+            return
+        LOGGER.info('Uploading %s to %s', local_path, remote_path)
+        client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
+        client.push_corpus_manager(local_path, remote_path, corpus_id, user_data)
 
     def mkdir(self, local_path, remote_path, storage_id=None):
         """Pushes a local_path file or directory to storage."""
@@ -197,13 +220,38 @@ class StorageClient(object):
 
         if client.isdir(remote_path):
             return client.listdir(remote_path, recursive)
-        else:
-            return client.listdir(remote_path, recursive, True)
+        return client.listdir(remote_path, recursive, True)
 
     def delete(self, remote_path, recursive=False, storage_id=None):
         """Deletes a file or directory from a storage."""
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
         return client.delete(remote_path, recursive)
+
+    def delete_corpus_manager(self, remote_path, corpus_id, storage_id=None):
+        """Deletes a file or directory from a storage."""
+        client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
+        return client.delete_corpus_manager(corpus_id)
+
+    def search(self, remote_path, remote_ids, search_query, nb_skip, nb_returns, storage_id=None):
+        """List corpus segments from a storage."""
+        client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
+        return client.search(remote_ids, search_query, nb_skip, nb_returns)
+
+    def seg_delete(self, remote_path, corpus_id, seg_ids, storage_id=None):
+        """Delete segments from a corpus in a storage."""
+        client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
+        return client.seg_delete(corpus_id, seg_ids)
+
+    def seg_modify(self, remote_path, corpus_id, seg_id, tgt_id, tgt_seg, src_seg, storage_id=None):
+        """Modify segment from a corpus in a storage."""
+        client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
+        return client.seg_modify(corpus_id, seg_id, tgt_id, tgt_seg, src_seg)
+
+    def seg_add(self, remote_path, corpus_id, segments, storage_id=None):
+        """Add segments from a corpus in a storage."""
+
+        client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
+        return client.seg_add(corpus_id, segments)
 
     def rename(self, old_remote_path, new_remote_path, storage_id=None):
         """Renames a file or directory on storage from old_remote_path to new_remote_path."""

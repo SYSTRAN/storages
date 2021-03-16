@@ -105,9 +105,9 @@ class SwiftStorage(Storage):
             for r in results:
                 has_results = True
                 if not r["success"]:
-                    raise RuntimeError("Cannot download file [%s]: %s", (remote_path, r["error"]))
+                    raise RuntimeError("Cannot download file [%s]: %s" % (remote_path, r["error"]))
             if not has_results:
-                raise RuntimeError("Cannot download file [%s]: NO RESULTS", remote_path)
+                raise RuntimeError("Cannot download file [%s]: NO RESULTS" % remote_path)
 
             with open(os.path.join(tmpdir, remote_path), "rb") as f:
                 for chunk in iter(lambda: f.read(buffer_size), b''):
@@ -154,12 +154,10 @@ class SwiftStorage(Storage):
                 raise RuntimeError("Cannot delete file [%s]: NO RESULT" % remote_path)
 
     def rename(self, old_remote_path, new_remote_path):
-        listfiles = self.listdir(old_remote_path, True)
+        listfiles = self.listdir(old_remote_path, True, not self.isdir(old_remote_path))
         for f in listfiles:
             assert f[:len(old_remote_path)] == old_remote_path, "inconsistent listdir result"
-            obj = SwiftCopyObject(f, {"destination": "/%s/%s%s" % (
-                                                                   self._container,
-                                                                   new_remote_path,
+            obj = SwiftCopyObject(f, {"destination": "/%s/%s%s" % (self._container, new_remote_path,
                                                                    f[len(old_remote_path):])})
             results = self._client.copy(self._container, [obj])
             has_results = False

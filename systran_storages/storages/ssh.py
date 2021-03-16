@@ -100,7 +100,6 @@ class RemoteStorage(Storage):
         return False
 
     def stat(self, remote_path):
-        client = self._connectSCPClient()
         try:
             remote_stat = self._connectSFTPClient().stat(remote_path)
             if S_ISDIR(remote_stat.st_mode):
@@ -209,7 +208,7 @@ class RemoteStorage(Storage):
         client = self._connectSFTPClient()
         try:
             client.stat(remote_path)
-        except IOError as e:
+        except IOError:
             return False
         return True
 

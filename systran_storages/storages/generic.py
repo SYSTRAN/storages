@@ -131,11 +131,23 @@ class Storage(object):
                     dir_path = os.path.dirname(path)
                     if not os.path.isdir(dir_path):
                         os.makedirs(dir_path)
-                    if path in allfiles:
-                        del allfiles[path]
-                        checksum_file = self._get_checksum_file(path)
-                        if checksum_file is not None and checksum_file in allfiles:
-                            del allfiles[checksum_file]
+                    if list_remote_files[f].get('alias_names'):
+                        for extra_filename in list_remote_files[f].get('alias_names'):
+                            extra_internal_path = self._internal_path(extra_filename)
+                            assert extra_internal_path.startswith(norm_path)
+                            extra_subpath = extra_internal_path[len(norm_path) + 1:]
+                            extra_path = os.path.join(local_path, extra_subpath)
+                            if extra_path in allfiles:
+                                del allfiles[extra_path]
+                                checksum_file = self._get_checksum_file(extra_path)
+                                if checksum_file is not None and checksum_file in allfiles:
+                                    del allfiles[checksum_file]
+                    else:
+                        if path in allfiles:
+                            del allfiles[path]
+                            checksum_file = self._get_checksum_file(path)
+                            if checksum_file is not None and checksum_file in allfiles:
+                                del allfiles[checksum_file]
                     self._sync_file(internal_path, path)
             for f in allfiles:
                 os.remove(f)
@@ -149,6 +161,11 @@ class Storage(object):
     @abc.abstractmethod
     def stream(self, remote_path, buffer_size=1024):
         """return a generator on a remote file
+        """
+        raise NotImplementedError()
+
+    def stream_corpus_manager(self, remote_id, remote_format, buffer_size=1024):
+        """return a generator on a remote file for Corpus Manager storage
         """
         raise NotImplementedError()
 
@@ -167,7 +184,7 @@ class Storage(object):
             dirname = os.path.dirname(remote_path)
             self.mkdir(dirname)
             LOGGER.info('Uploading file %s to %s', local_path, remote_path)
-            self.push_file(local_path, remote_path)
+            return self.push_file(local_path, remote_path)
         else:
             def push_rec(local_path, remote_path):
                 files = os.listdir(local_path)
@@ -182,6 +199,11 @@ class Storage(object):
                         self.push(local_filepath, remote_filepath)
 
             push_rec(local_path, remote_path)
+
+    def push_corpus_manager(self, local_path, remote_path, corpus_id, user_data):
+        """Push a file on a storage with only Corpus Manager storage
+        """
+        raise NotImplementedError()
 
     @abc.abstractmethod
     def mkdir(self, remote_path):
@@ -222,6 +244,11 @@ class Storage(object):
         else:
             self._delete_single(remote_path, False)
 
+    def delete_corpus_manager(self, corpus_id):
+        """Delete a file from Corpus Manager storage
+        """
+        raise NotImplementedError()
+
     @abc.abstractmethod
     def rename(self, old_remote_path, new_remote_path):
         """Delete a file or a directory from a storage
@@ -259,3 +286,23 @@ class Storage(object):
         """convert the internal path to the external user path
         """
         return path
+
+    def search(self, remote_ids, search_query, nb_skip, nb_limit):
+        """list corpus segments identified by corpus id
+        """
+        raise NotImplementedError()
+
+    def seg_delete(self, corpus_id, seg_ids):
+        """Delete segments identified by id
+        """
+        raise NotImplementedError()
+
+    def seg_modify(self, corpus_id, seg_id, tgt_id, tgt_seg, src_seg):
+        """Modify segments identified by id
+        """
+        raise NotImplementedError()
+
+    def seg_add(self, corpus_id, segments):
+        """Delete segments identified by id
+        """
+        raise NotImplementedError()
