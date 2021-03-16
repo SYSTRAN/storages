@@ -69,7 +69,11 @@ class HTTPStorage(Storage):
             raise RuntimeError('Error when listing remote directory %s (status %d)' % (
                 remote_path, res.status_code))
         data = res.json()
-        return [os.path.join(remote_path, f["path"]) for f in data]
+        listdir = {}
+        for f in data:
+            path = os.path.join(remote_path, f["path"])
+            listdir[path] = {'path': path}
+        return listdir
 
     def _delete_single(self, remote_path, isdir):
         raise NotImplementedError()
