@@ -68,13 +68,17 @@ class CMStorages(Storage):
         multipart_data = decoder.MultipartDecoder.from_response(response)
         for part_index, part in enumerate(multipart_data.parts):
             filename = local_path
+            src_extension = "." + corpus.get("sourceLanguage")
+            tgt_extension = "." + corpus.get("targetLanguages")[0]
             if local_path.endswith('.tmx') or local_path.endswith('.txt'):
                 if part_index == 1:
-                    filename += "." + corpus.get("targetLanguages")[0]
+                    filename += tgt_extension
                 else:
-                    filename += "." + corpus.get("sourceLanguage")
-            with open(filename, "wb") as file_writer:
-                file_writer.write(part.content)
+                    filename += src_extension
+            if (filename.endswith(src_extension) and part_index == 0) or\
+                    (filename.endswith(tgt_extension) and part_index == 1):
+                with open(filename, "wb") as file_writer:
+                    file_writer.write(part.content)
 
     def _get_checksum_from_database(self, remote_path):
         corpus = self._get_corpus_info_from_remote_path(remote_path)
