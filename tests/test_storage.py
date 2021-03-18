@@ -313,7 +313,7 @@ def test_is_managed_path():
     assert client.is_managed_path("s3_models:ubuntu/file.txt")
     assert client.is_managed_path("s3_test:")
 
-def test_push_and_delete_cm(request, storages, storage_id):
+def test_cm_storage(request, storages, storage_id):
     if storage_id != 'corpus_manager':
         return
     corpus_dir = str(request.config.rootdir / "corpus")
@@ -387,3 +387,4 @@ def test_push_and_delete_cm(request, storages, storage_id):
 
     assert not storage_client.exists(os.path.join("myremotedirectory", "testFormat"),
                                      storage_id=storage_id)
+
