@@ -334,6 +334,11 @@ def test_push_and_delete_cm(request, storages, storage_id):
                             "myremotedirectory/",
                             storage_id=storage_id)
 
+    # checking ls
+    lsdir = sorted(storage_client.listdir(os.path.join("myremotedirectory/"),
+                                          storage_id=storage_id))
+    assert {'myremotedirectory/testFormat.txt'}.issubset(set(lsdir))
+
     #Delete pushed corpus
     storage_client.delete(os.path.join("myremotedirectory", "testFormat.txt"),
                           storage_id=storage_id)
@@ -342,16 +347,25 @@ def test_push_and_delete_cm(request, storages, storage_id):
                                  storage_id=storage_id)
 
     storage_client.push(os.path.join(corpus_dir, "train", "testFormat.tmx"),
-                        "myremotedirectory/",
+                        os.path.join("myremotedirectory", "test/"),
                         storage_id=storage_id)
 
-    assert storage_client.exists(os.path.join("myremotedirectory", "testFormat.tmx"),
+    assert storage_client.exists(os.path.join("myremotedirectory", "test", "testFormat.tmx"),
                                  storage_id=storage_id)
 
-    storage_client.delete(os.path.join("myremotedirectory", "testFormat.tmx"),
+    lsdir = sorted(storage_client.listdir(os.path.join("myremotedirectory/"),
+                                          storage_id=storage_id))
+    assert {'myremotedirectory/test/'}.issubset(set(lsdir))
+
+    lsdir = sorted(storage_client.listdir(os.path.join("myremotedirectory/"),
+                                          recursive=True,
+                                          storage_id=storage_id))
+    assert {'myremotedirectory/test/testFormat.tmx'}.issubset(set(lsdir))
+
+    storage_client.delete(os.path.join("myremotedirectory", "test", "testFormat.tmx"),
                           storage_id=storage_id)
 
-    assert not storage_client.exists(os.path.join("myremotedirectory", "testFormat.tmx"),
+    assert not storage_client.exists(os.path.join("myremotedirectory", "test", "testFormat.tmx"),
                                      storage_id=storage_id)
 
     with pytest.raises(Exception):
