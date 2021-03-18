@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<tmx version="1.4">
+<header creationtool="Olifant" creationtoolversion="3.0.8.0" datatype="unkown" segtype="paragraph" adminlang="EN-US" srclang="EN-US" o-tmf="Olifant" creationdate="20201117T140105Z" creationid="pj" changedate="20201117T140240Z" changeid="pj">
+</header>
+<body>
+<tu>
+<tuv xml:lang="EN-US">
+<seg>English</seg>
+</tuv>
+<tuv xml:lang="FR-FR">
+<seg>French</seg>
+</tuv>
+</tu>
+<tu>
+<tuv xml:lang="EN-US">
+<seg>This is a test</seg>
+</tuv>
+<tuv xml:lang="FR-FR">
+<seg>C'est un essai</seg>
+</tuv>
+</tu>
+</body>
+</tmx>

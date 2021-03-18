@@ -1,0 +1,3 @@
+#TM
+#EN	FR
+&lt;div id = &quot;ch&prop;racter&quot;&gt	­ test ؀ format ‍ ￺ ‌ with ⁯ other chars.
