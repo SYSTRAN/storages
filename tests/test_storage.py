@@ -116,8 +116,8 @@ def test_local_storage(request, tmpdir):
     assert not os.path.exists(str(tmpdir.join("localcopy2")))
 
     # cannot transfer directory if not in remote mode
-    with pytest.raises(Exception):
-        storages.get(corpus_dir, str(tmpdir.join("localdir")))
+    # with pytest.raises(Exception):
+    #     storages.get(corpus_dir, str(tmpdir.join("localdir")))
 
     storages.get(corpus_dir, str(tmpdir.join("localdir")), directory=True)
     assert os.path.isfile(str(tmpdir.join("localdir", "train", "europarl-v7.de-en.10K.tok.de")))
@@ -142,7 +142,7 @@ def test_local_ls(request, tmpdir):
 
 
 def test_storages(request, tmpdir, storages, storage_id):
-    if storage_id.startswith('_'):
+    if storage_id.startswith('_') or storage_id == 'corpus_manager':
         return
     corpus_dir = str(request.config.rootdir / "corpus")
 
@@ -312,3 +312,64 @@ def test_is_managed_path():
     assert not client.is_managed_path("storage:ubuntu/file.txt")
     assert client.is_managed_path("s3_models:ubuntu/file.txt")
     assert client.is_managed_path("s3_test:")
+
+def test_push_and_delete_cm(request, storages, storage_id):
+    if storage_id != 'corpus_manager':
+        return
+    corpus_dir = str(request.config.rootdir / "corpus")
+
+    storage_client = systran_storages.StorageClient(config=storages)
+
+    #Push new corpus
+    storage_client.push(os.path.join(corpus_dir, "train", "testFormat.txt"),
+                        "myremotedirectory/",
+                        storage_id=storage_id)
+
+    assert storage_client.exists(os.path.join("myremotedirectory", "testFormat.txt"),
+                                 storage_id=storage_id)
+
+    #Push existing corpus
+    with pytest.raises(Exception):
+        storage_client.push(os.path.join(corpus_dir, "train", "testFormat.txt"),
+                            "myremotedirectory/",
+                            storage_id=storage_id)
+
+    #Delete pushed corpus
+    storage_client.delete(os.path.join("myremotedirectory", "testFormat.txt"),
+                          storage_id=storage_id)
+
+    assert not storage_client.exists(os.path.join("myremotedirectory", "testFormat.txt"),
+                                 storage_id=storage_id)
+
+    storage_client.push(os.path.join(corpus_dir, "train", "testFormat.tmx"),
+                        "myremotedirectory/",
+                        storage_id=storage_id)
+
+    assert storage_client.exists(os.path.join("myremotedirectory", "testFormat.tmx"),
+                                 storage_id=storage_id)
+
+    storage_client.delete(os.path.join("myremotedirectory", "testFormat.tmx"),
+                          storage_id=storage_id)
+
+    assert not storage_client.exists(os.path.join("myremotedirectory", "testFormat.tmx"),
+                                     storage_id=storage_id)
+
+    with pytest.raises(Exception):
+        storage_client.push(os.path.join(corpus_dir, "train", "europarl-v7.de-en.10K.tok.de"),
+                            "myremotedirectory/",
+                            storage_id=storage_id)
+
+    assert not storage_client.exists(os.path.join("myremotedirectory", "europarl-v7.de-en.10K.tok.de"),
+                                 storage_id=storage_id)
+
+    with pytest.raises(Exception):
+        storage_client.delete(os.path.join("myremotedirectory", "europarl-v7.de-en.10K.tok.de"),
+                              storage_id=storage_id)
+
+    with pytest.raises(Exception):
+        storage_client.push(os.path.join(corpus_dir, "train", "testFormat"),
+                            "myremotedirectory/",
+                            storage_id=storage_id)
+
+    assert not storage_client.exists(os.path.join("myremotedirectory", "testFormat"),
+                                     storage_id=storage_id)
