@@ -17,14 +17,6 @@ from systran_storages.storages.utils import datetime_to_timestamp
 LOGGER = logging.getLogger(__name__)
 
 
-def add_suffix(file_name, to_add):
-    parts = file_name.split('.')
-    name = parts[0] + to_add
-    for part in parts[1:]:
-        name = name + '.' + part
-    return name
-
-
 class CMStorages(Storage):
     """Corpus Manager storage."""
 
@@ -437,8 +429,8 @@ class CMStorages(Storage):
         local_path = os.path.join(temp_files, data.filename)
         response_push = self.push_file(local_path, remote_path)
         corpus_id = response_push["id"]
-        training_file = training_path + add_suffix(data.filename, '_train')
-        testing_file = testing_path + add_suffix(data.filename, '_test')
+        training_file = training_path + data.filename
+        testing_file = testing_path + data.filename
         data_partition = {
                 'accountId': self.account_id,
                 'id': corpus_id,
