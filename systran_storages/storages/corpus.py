@@ -363,7 +363,9 @@ class CMStorages(Storage):
             parentDirectory = '/' + '/'.join(directoryArray[:-1])
             data = {
                 'directory': parentDirectory,
-                'accountId': self.account_id
+                'accountId': self.account_id,
+                'withoutError': 'false',
+                'withoutPending': 'false'
             }
             response = requests.get(self.host_url + '/corpus/list', params=data)
             if "directories" in response.json():
