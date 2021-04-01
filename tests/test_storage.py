@@ -395,3 +395,19 @@ def test_cm_storage(request, storages, storage_id):
     assert not storage_client.exists(os.path.join("myremotedirectory", "testFormat"),
                                      storage_id=storage_id)
 
+    # Partition corpus
+    training_data_path = os.path.join("myremotedirectory", "train") + os.path.sep
+    testing_data_path = os.path.join("myremotedirectory", "test") + os.path.sep
+    storage_client.partition_auto(os.path.join("myremotedirectory", "testFormat.txt"),
+                                  training_path=training_data_path,
+                                  testing_path=testing_data_path,
+                                  storage_id=storage_id,
+                                  percent=10)
+
+    assert storage_client.exists(os.path.join("myremotedirectory/train", "testFormat.txt"),
+                                 storage_id=storage_id)
+    assert storage_client.exists(os.path.join("myremotedirectory/test", "testFormat.txt"),
+                                 storage_id=storage_id)
+    assert not storage_client.exists(os.path.join("myremotedirectory", "testFormat.txt"),
+                                     storage_id=storage_id)
+

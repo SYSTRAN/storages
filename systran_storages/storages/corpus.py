@@ -422,6 +422,33 @@ class CMStorages(Storage):
                     "Cannot import file '%s' in '%s'." % (local_path, remote_path))
             return response.json()
 
+    def partition_auto(self, data, training_path, testing_path, testing_percent):
+        remote_path = training_path + data.filename
+        temp_files = tempfile.mkdtemp()
+        data.save(os.path.join(temp_files, data.filename))
+        local_path = os.path.join(temp_files, data.filename)
+        response_push = self.push_file(local_path, remote_path)
+        corpus_id = response_push["id"]
+        training_file = training_path + data.filename
+        testing_file = testing_path + data.filename
+        data_partition = {
+                'accountId': self.account_id,
+                'id': corpus_id,
+                'noRandom': False,
+                'usePercentage': True,
+                'partition': [
+                    {'segments': str(100-testing_percent), 'filename': training_file},
+                    {'segments': str(testing_percent), 'filename': testing_file}
+                ],
+            }
+
+        response_partition = requests.post(self.host_url + '/corpus/partition', data=json.dumps(data_partition))
+        if response_partition.status_code != 200:
+            raise ValueError(
+                "Cannot partition file '%s' in '%s' and '%s'." % (local_path, training_path, testing_path))
+        self.delete_corpus_manager(corpus_id)
+        return response_partition.json()
+
     def _create_path_from_root(self, remote_path):
         return_value = ''
         if self.root_folder is not '':
