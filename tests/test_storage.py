@@ -404,9 +404,9 @@ def test_cm_storage(request, storages, storage_id):
                                   storage_id=storage_id,
                                   percent=10)
 
-    assert storage_client.exists(os.path.join("myremotedirectory/train", "testFormat_train.txt"),
+    assert storage_client.exists(os.path.join("myremotedirectory/train", "testFormat.txt"),
                                  storage_id=storage_id)
-    assert storage_client.exists(os.path.join("myremotedirectory/test", "testFormat_test.txt"),
+    assert storage_client.exists(os.path.join("myremotedirectory/test", "testFormat.txt"),
                                  storage_id=storage_id)
     assert not storage_client.exists(os.path.join("myremotedirectory", "testFormat.txt"),
                                      storage_id=storage_id)
