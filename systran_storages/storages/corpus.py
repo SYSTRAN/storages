@@ -422,15 +422,12 @@ class CMStorages(Storage):
                     "Cannot import file '%s' in '%s'." % (local_path, remote_path))
             return response.json()
 
-    def partition_auto(self, data, training_path, testing_path, testing_percent):
-        remote_path = training_path + data.filename
-        temp_files = tempfile.mkdtemp()
-        data.save(os.path.join(temp_files, data.filename))
-        local_path = os.path.join(temp_files, data.filename)
+    def partition_auto(self, local_path, training_path, testing_path, testing_percent):
+        remote_path = training_path + os.path.basename(local_path)
         response_push = self.push_file(local_path, remote_path)
         corpus_id = response_push["id"]
-        training_file = training_path + data.filename
-        testing_file = testing_path + data.filename
+        training_file = training_path + os.path.basename(local_path)
+        testing_file = testing_path + os.path.basename(local_path)
         data_partition = {
                 'accountId': self.account_id,
                 'id': corpus_id,
