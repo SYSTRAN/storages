@@ -216,16 +216,17 @@ class CMStorages(Storage):
                 if remote_path in key['filename']:
                     date_time = datetime.strptime(key["createdAt"].strip(), "%a %b %d %H:%M:%S %Y")
                     filename = key["filename"][len(self.root_folder) + 1:]
-                    listdir[filename] = {'entries': int(key.get('nbSegments')),
+                    listdir[filename] = {'entries': int(key.get('nbSegments')) if key.get('nbSegments') else None,
                                          'format': key.get('format'),
                                          'id': key.get('id'),
-                                         "type": self.resource_type,
+                                         'type': self.resource_type,
+                                         'status': key.get('status'),
                                          'sourceLanguage': key.get('sourceLanguage'),
                                          'targetLanguages': key.get('targetLanguages'),
                                          'last_modified': datetime_to_timestamp(
                                              date_time),
-                                         'alias_names': [filename + "." + key.get('sourceLanguage'),
-                                                         filename + "." + key.get('targetLanguages')[0]]}
+                                         'alias_names': [filename + "." + key.get('sourceLanguage', ''),
+                                                         filename + "." + key.get('targetLanguages', [''])[0]]}
                     if recursive:
                         folder = os.path.dirname(key['filename'][len(self.root_folder) + 1:])
                         all_dirs = folder.split("/")
@@ -251,7 +252,7 @@ class CMStorages(Storage):
         response = requests.get(self.host_url + '/corpus/delete', params=params)
         if response.status_code != 200:
             raise RuntimeError(
-                'cannot delete %s (response code %d)' % response.status_code)
+                'cannot delete the corpus "%s" (response code %d)' % (corpus_id, response.status_code))
         status = response.ok
         return status
 
