@@ -449,11 +449,11 @@ class CMStorages(Storage):
 
     def _create_path_from_root(self, remote_path):
         return_value = ''
-        if self.root_folder is not '':
+        if self.root_folder != '':
             return_value = '/' + self.path_without_starting_slash(self.root_folder)
-        if remote_path is not '':
+        if remote_path != '':
             return_value += '/' + self.path_without_starting_slash(remote_path)
-        if return_value is '':
+        if return_value == '':
             return '/'
         if return_value.endswith('.tmx') or return_value.endswith('.txt') or return_value.endswith('/'):
             return return_value
