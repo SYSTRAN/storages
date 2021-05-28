@@ -33,19 +33,21 @@ def lock(fname):
 
 
 @six.add_metaclass(abc.ABCMeta)
-class Storage(object):
+class Storage:
     """Abstract class for storage implementations."""
 
     def __init__(self, storage_id):
         self._storage_id = storage_id
 
     # Non conventional storage might need to override these.
-    def join(self, path, *paths):
+    @staticmethod
+    def join(path, *paths):
         """Build a path respecting storage prefix
         """
         return os.path.join(path, *paths)
 
-    def split(self, path):
+    @staticmethod
+    def split(path):
         """Split a path
         """
         return os.path.split(path)
@@ -61,6 +63,7 @@ class Storage(object):
         """
         raise NotImplementedError()
 
+    @abc.abstractmethod
     def _get_checksum_file(self, local_path):
         """return checksum sum used by storage or None
         """
@@ -111,7 +114,7 @@ class Storage(object):
                 LOGGER.info('Integrity check is successful for local directory: %s', local_path)
                 return
             allfiles = {}
-            for root, dirs, files in os.walk(local_path):
+            for root, _, files in os.walk(local_path):
                 if os.path.basename(root) == _META_SUBDIR:
                     continue
                 for f in files:
@@ -157,7 +160,7 @@ class Storage(object):
             if check_integrity_fn is not None and not check_integrity_fn(local_path):
                 try:
                     shutil.rmtree(local_path)
-                except Exception:
+                except (Exception,):
                     pass
                 raise RuntimeError('integrity check failed on %s' % local_path)
 
@@ -188,20 +191,21 @@ class Storage(object):
             self.mkdir(dirname)
             LOGGER.info('Uploading file %s to %s', local_path, remote_path)
             return self.push_file(local_path, remote_path)
-        else:
-            def push_rec(local_path, remote_path):
-                files = os.listdir(local_path)
-                for f in files:
-                    if f.startswith("."):
-                        continue
-                    local_filepath = os.path.join(local_path, f)
-                    remote_filepath = os.path.join(remote_path, f)
-                    if os.path.isdir(local_filepath):
-                        push_rec(local_filepath, remote_filepath)
-                    else:
-                        self.push(local_filepath, remote_filepath)
 
-            push_rec(local_path, remote_path)
+        def push_rec(local_path, remote_path):
+            files = os.listdir(local_path)
+            for f in files:
+                if f.startswith("."):
+                    continue
+                local_filepath = os.path.join(local_path, f)
+                remote_filepath = os.path.join(remote_path, f)
+                if os.path.isdir(local_filepath):
+                    push_rec(local_filepath, remote_filepath)
+                else:
+                    self.push(local_filepath, remote_filepath)
+
+        push_rec(local_path, remote_path)
+        return None
 
     def push_corpus_manager(self, local_path, remote_path, corpus_id, user_data):
         """Push a file on a storage with only Corpus Manager storage
@@ -285,7 +289,8 @@ class Storage(object):
         """
         raise NotImplementedError()
 
-    def _external_path(self, path):
+    @staticmethod
+    def _external_path(path):
         """convert the internal path to the external user path
         """
         return path

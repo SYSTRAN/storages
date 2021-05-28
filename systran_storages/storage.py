@@ -7,7 +7,7 @@ from systran_storages import storages
 LOGGER = logging.getLogger(__name__)
 
 
-class StorageClient(object):
+class StorageClient:
     """Client to get and push files to a storage."""
 
     def __init__(self, config=None):
@@ -27,7 +27,8 @@ class StorageClient(object):
         fields = path.split(':')
         return len(fields) == 2 and fields[0] in self._config
 
-    def parse_managed_path(self, path):
+    @staticmethod
+    def parse_managed_path(path):
         """Returns the storage ID and the full path from a managed path."""
         fields = path.split(':')
         return fields[0], fields[1]
@@ -75,7 +76,7 @@ class StorageClient(object):
                         port=config.get('port', 22),
                         basedir=config.get('basedir'))
                 elif config['type'] == 'http':
-                    client = storages.HTTPStorage(
+                    client = storages.HTTPStorage(  # pylint: disable=abstract-class-instantiated
                         storage_id,
                         config['get_pattern'],
                         pattern_push=config.get('post_pattern'),
@@ -169,7 +170,7 @@ class StorageClient(object):
         if not os.path.exists(local_path):
             raise RuntimeError('%s not found' % local_path)
         if local_path == remote_path:
-            return
+            return None
         LOGGER.info('Uploading %s to %s', local_path, remote_path)
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
         return client.push(local_path, remote_path)
@@ -179,10 +180,11 @@ class StorageClient(object):
         if not os.path.exists(local_path):
             raise RuntimeError('%s not found' % local_path)
         if local_path == remote_path:
-            return
+            return None
         LOGGER.info('Uploading %s to %s', local_path, remote_path)
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
         client.push_corpus_manager(local_path, remote_path, corpus_id, user_data)
+        return None
 
     def partition_auto(self, data, training_path, testing_path, remote_path, storage_id, partition_value, is_percent):
         LOGGER.info('Partitioning %s in %s to %s', str(data), training_path, testing_path)

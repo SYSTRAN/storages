@@ -2,8 +2,6 @@
 import json
 from datetime import datetime
 import logging
-import shutil
-import tempfile
 import os
 import uuid
 
@@ -21,7 +19,7 @@ class CMStorages(Storage):
     """Corpus Manager storage."""
 
     def __init__(self, storage_id, host_url, root_folder, account_id=None):
-        super(CMStorages, self).__init__(storage_id)
+        super().__init__(storage_id)
         self.host_url = host_url
         self.account_id = account_id
         self.resource_type = "corpusmanager"
@@ -39,7 +37,8 @@ class CMStorages(Storage):
         self._get_main_file_safe(remote_path, local_path)
         self._get_checksum_file_safe(remote_path, local_path)
 
-    def _get_checksum_file_name(self, local_path):
+    @staticmethod
+    def _get_checksum_file_name(local_path):
         (local_dir, basename) = os.path.split(local_path)
         return os.path.join(local_dir, "." + basename + ".md5")
 
@@ -107,7 +106,8 @@ class CMStorages(Storage):
         with open(self._get_checksum_file_name(local_path), "w") as file_writer:
             file_writer.write(file_checksum)
 
-    def _alias_files_exist(self, local_path):
+    @staticmethod
+    def _alias_files_exist(local_path):
         dirname = os.path.dirname(local_path)
         number_of_files = 0
         for filename in os.listdir(dirname):
@@ -307,9 +307,9 @@ class CMStorages(Storage):
             raise ValueError("Cannot list segment '%s' in '%s'." % (remote_ids, list_segment['error']))
         return list_segment.get("segments"), list_segment.get('total')
 
-    def seg_delete(self, corpus_id, list_seg_id):
+    def seg_delete(self, corpus_id, seg_ids):
         deleted_seg = 0
-        for seg_id in list_seg_id:
+        for seg_id in seg_ids:
             params = {
                 'accountId': self.account_id,
                 'id': corpus_id,
@@ -364,16 +364,17 @@ class CMStorages(Storage):
             raise ValueError("Bad remote_path: " + remote_path)
         if len(directoryArray) == 1 and directoryArray[0] == '':
             return True
-        else:
-            parentDirectory = '/' + '/'.join(directoryArray[:-1])
-            data = {
-                'directory': parentDirectory,
-                'accountId': self.account_id
-            }
-            response = requests.get(self.host_url + '/corpus/list', params=data)
-            if "directories" in response.json():
-                if directoryArray[-1] in response.json()["directories"]:
-                    return True
+
+        parentDirectory = '/' + '/'.join(directoryArray[:-1])
+        data = {
+            'directory': parentDirectory,
+            'accountId': self.account_id
+        }
+        response = requests.get(self.host_url + '/corpus/list', params=data)
+        if "directories" in response.json():
+            if directoryArray[-1] in response.json()["directories"]:
+                return True
+
         return False
 
     def exists(self, remote_path):
@@ -437,7 +438,7 @@ class CMStorages(Storage):
             data_partition = [
                                 {'segments': str(100-partition_value), 'filename': str(training_file)},
                                 {'segments': str(partition_value), 'filename': str(testing_file)}
-                            ]
+            ]
         else:
             data_partition = {
                 'usePercentage': False,
@@ -500,10 +501,11 @@ class CMStorages(Storage):
             return return_value[0:p+len(corpus_format)]
         return return_value
 
-    def _internal_path(self, remote_path):
-        return self.path_without_starting_slash(remote_path)
+    def _internal_path(self, path):
+        return self.path_without_starting_slash(path)
 
-    def path_without_starting_slash(self, remote_path):
+    @staticmethod
+    def path_without_starting_slash(remote_path):
         if remote_path.startswith('/'):
             return remote_path[1:]
         return remote_path

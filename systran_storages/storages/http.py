@@ -16,7 +16,7 @@ class HTTPStorage(Storage):
     """Simple http file-only storage."""
 
     def __init__(self, storage_id, pattern_get, pattern_push=None, pattern_list=None):
-        super(HTTPStorage, self).__init__(storage_id)
+        super().__init__(storage_id)
         self._pattern_get = pattern_get
         self._pattern_push = pattern_push
         self._pattern_list = pattern_list
@@ -92,5 +92,5 @@ class HTTPStorage(Storage):
     def exists(self, remote_path):
         raise NotImplementedError()
 
-    def _internal_path(self, remote_path):
-        return remote_path
+    def _internal_path(self, path):
+        return path
