@@ -320,6 +320,7 @@ def test_is_managed_path():
     assert client.is_managed_path("s3_models:ubuntu/file.txt")
     assert client.is_managed_path("s3_test:")
 
+
 def test_cm_storage(request, storages, storage_id):
     if storage_id != 'corpus_manager':
         return
@@ -327,7 +328,7 @@ def test_cm_storage(request, storages, storage_id):
 
     storage_client = systran_storages.StorageClient(config=storages)
 
-    #Push new corpus
+    # Push new corpus
     storage_client.push(os.path.join(corpus_dir, "train", "testFormat.txt"),
                         "myremotedirectory/",
                         storage_id=storage_id)
@@ -335,7 +336,7 @@ def test_cm_storage(request, storages, storage_id):
     assert storage_client.exists(os.path.join("myremotedirectory", "testFormat.txt"),
                                  storage_id=storage_id)
 
-    #Push existing corpus
+    # Push existing corpus
     with pytest.raises(Exception):
         storage_client.push(os.path.join(corpus_dir, "train", "testFormat.txt"),
                             "myremotedirectory/",
@@ -346,12 +347,12 @@ def test_cm_storage(request, storages, storage_id):
                                           storage_id=storage_id))
     assert {'myremotedirectory/testFormat.txt'}.issubset(set(lsdir))
 
-    #Delete pushed corpus
+    # Delete pushed corpus
     storage_client.delete(os.path.join("myremotedirectory", "testFormat.txt"),
                           storage_id=storage_id)
 
     assert not storage_client.exists(os.path.join("myremotedirectory", "testFormat.txt"),
-                                 storage_id=storage_id)
+                                     storage_id=storage_id)
 
     storage_client.push(os.path.join(corpus_dir, "train", "testFormat.tmx"),
                         os.path.join("myremotedirectory", "test/"),
@@ -381,7 +382,7 @@ def test_cm_storage(request, storages, storage_id):
                             storage_id=storage_id)
 
     assert not storage_client.exists(os.path.join("myremotedirectory", "europarl-v7.de-en.10K.tok.de"),
-                                 storage_id=storage_id)
+                                     storage_id=storage_id)
 
     with pytest.raises(Exception):
         storage_client.delete(os.path.join("myremotedirectory", "europarl-v7.de-en.10K.tok.de"),
@@ -410,4 +411,3 @@ def test_cm_storage(request, storages, storage_id):
                                  storage_id=storage_id)
     assert not storage_client.exists(os.path.join("myremotedirectory", "testFormat.txt"),
                                      storage_id=storage_id)
-

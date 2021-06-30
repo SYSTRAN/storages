@@ -437,8 +437,8 @@ class CMStorages(Storage):
                 'partition': [
                     {'segments': str(100-testing_percent), 'filename': training_file},
                     {'segments': str(testing_percent), 'filename': testing_file}
-                ],
-            }
+                ]
+        }
 
         response_partition = requests.post(self.host_url + '/corpus/partition', data=json.dumps(data_partition))
         if response_partition.status_code != 200:

@@ -30,8 +30,8 @@ class LocalStorage(Storage):
             return False
         stat_remote = os.stat(remote_path)
         stat_local = os.stat(local_path)
-        return stat_remote.st_mtime == stat_local.st_mtime \
-               and stat_remote.st_size == stat_local.st_size
+        return stat_remote.st_mtime == stat_local.st_mtime and\
+            stat_remote.st_size == stat_local.st_size
 
     def stream(self, remote_path, buffer_size=1024):
         def generate():

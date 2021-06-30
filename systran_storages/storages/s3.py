@@ -117,7 +117,7 @@ class S3Storage(Storage):
         if recursive:
             delimiter = ''
 
-        list_objects_args={
+        list_objects_args = {
             'Bucket': self._bucket_name,
             'Delimiter': delimiter,
             'Prefix': remote_path
