@@ -423,7 +423,7 @@ class CMStorages(Storage):
                     "Cannot import file '%s' in '%s'." % (local_path, remote_path))
             return response.json()
 
-    def partition_auto(self, local_path, training_path, testing_path, testing_percent):
+    def partition_auto(self, local_path, training_path, testing_path, partition_value, is_percent):
         remote_path = training_path + os.path.basename(local_path)
         training_file = training_path + os.path.basename(local_path)
         testing_file = testing_path + os.path.basename(local_path)
@@ -433,10 +433,20 @@ class CMStorages(Storage):
             'accountId': self.account_id
         }
 
-        data_partition =[
-                            {'segments': str(100-testing_percent), 'filename': str(training_file)},
-                            {'segments': str(testing_percent), 'filename': str(testing_file)}
-                        ]
+        if is_percent:
+            data_partition = [
+                                {'segments': str(100-partition_value), 'filename': str(training_file)},
+                                {'segments': str(partition_value), 'filename': str(testing_file)}
+                            ]
+        else:
+            data_partition = {
+                'usePercentage': False,
+                'partition': [
+                    {'segments': 'remains', 'filename': str(training_file)},
+                    {'segments': str(partition_value), 'filename': str(testing_file)}
+                ],
+            }
+
         data_partition_str = json.dumps(data_partition)
 
         response = requests.get(self.host_url + '/corpus/exists', params=data)
