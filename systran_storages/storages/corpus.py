@@ -68,8 +68,8 @@ class CMStorages(Storage):
         multipart_data = decoder.MultipartDecoder.from_response(response)
         for part_index, part in enumerate(multipart_data.parts):
             filename = local_path
-            src_extension = "." + corpus.get("sourceLanguage")
-            tgt_extension = "." + corpus.get("targetLanguages")[0]
+            src_extension = "." + corpus.get("sourceLanguageCode")
+            tgt_extension = "." + corpus.get("targetLanguageCodes")[0]
             if local_path.endswith('.tmx') or local_path.endswith('.txt'):
                 if part_index == 1:
                     filename += tgt_extension
