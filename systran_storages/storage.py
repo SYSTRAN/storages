@@ -184,10 +184,10 @@ class StorageClient(object):
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
         client.push_corpus_manager(local_path, remote_path, corpus_id, user_data)
 
-    def partition_auto(self, data, training_path, testing_path, remote_path, storage_id, percent):
+    def partition_auto(self, data, training_path, testing_path, remote_path, storage_id, partition_value, is_percent):
         LOGGER.info('Partitioning %s in %s to %s', str(data), training_path, testing_path)
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
-        return client.partition_auto(data, training_path, testing_path, percent)
+        return client.partition_auto(data, training_path, testing_path, partition_value, is_percent)
 
     def mkdir(self, local_path, remote_path, storage_id=None):
         """Pushes a local_path file or directory to storage."""

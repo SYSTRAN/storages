@@ -423,29 +423,63 @@ class CMStorages(Storage):
                     "Cannot import file '%s' in '%s'." % (local_path, remote_path))
             return response.json()
 
-    def partition_auto(self, local_path, training_path, testing_path, testing_percent):
+    def partition_auto(self, local_path, training_path, testing_path, partition_value, is_percent):
         remote_path = training_path + os.path.basename(local_path)
-        response_push = self.push_file(local_path, remote_path)
-        corpus_id = response_push["id"]
         training_file = training_path + os.path.basename(local_path)
         testing_file = testing_path + os.path.basename(local_path)
-        data_partition = {
-                'accountId': self.account_id,
-                'id': corpus_id,
-                'noRandom': False,
-                'usePercentage': True,
-                'partition': [
-                    {'segments': str(100-testing_percent), 'filename': training_file},
-                    {'segments': str(testing_percent), 'filename': testing_file}
-                ]
+
+        data = {
+            'filename': self._create_path_from_root(remote_path),
+            'accountId': self.account_id
         }
 
-        response_partition = requests.post(self.host_url + '/corpus/partition', data=json.dumps(data_partition))
-        if response_partition.status_code != 200:
-            raise ValueError(
-                "Cannot partition file '%s' in '%s' and '%s'." % (local_path, training_path, testing_path))
-        self.delete_corpus_manager(corpus_id)
-        return response_partition.json()
+        if is_percent:
+            data_partition = [
+                                {'segments': str(100-partition_value), 'filename': str(training_file)},
+                                {'segments': str(partition_value), 'filename': str(testing_file)}
+                            ]
+        else:
+            data_partition = {
+                'usePercentage': False,
+                'partition': [
+                    {'segments': 'remains', 'filename': str(training_file)},
+                    {'segments': str(partition_value), 'filename': str(testing_file)}
+                ],
+            }
+
+        data_partition_str = json.dumps(data_partition)
+
+        response = requests.get(self.host_url + '/corpus/exists', params=data)
+        if response.status_code == 200 and "true" in str(response.content):
+            raise RuntimeError("Cannot push file: %s already exists"
+                               % remote_path)
+        with open(local_path, "rb") as f:
+            data = f.read()
+            if local_path.endswith(".txt"):
+                format_path = 'text/bitext'
+            elif local_path.endswith(".tmx"):
+                format_path = 'application/x-tmx+xml'
+            else:
+                raise ValueError(
+                    'cannot push %s, only support format of the corpus (application/x-tmx+xml, '
+                    'text/bitext)' % local_path)
+
+            mp_encoder = MultipartEncoder(
+                [
+                    ('accountId', self.account_id),
+                    ('format', format_path),
+                    ('importOptions', '{"cleanFormatting": true}'),
+                    ('filename', self._create_path_from_root(remote_path)),
+                    ('partition', data_partition_str),
+                    ('corpus', data)
+                ]
+            )
+            response = requests.post(self.host_url + '/corpus/import/partition', data=mp_encoder,
+                                     headers={'Content-Type': mp_encoder.content_type})
+            if response.status_code != 200:
+                raise ValueError(
+                    "Cannot import file '%s' in '%s'." % (local_path, remote_path))
+            return response.json()
 
     def _create_path_from_root(self, remote_path):
         return_value = ''
