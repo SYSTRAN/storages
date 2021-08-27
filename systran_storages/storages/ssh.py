@@ -22,7 +22,7 @@ class RemoteStorage(Storage):
     """
 
     def __init__(self, storage_id, server, user, password, pkey=None, port=22, basedir=None):
-        super(RemoteStorage, self).__init__(storage_id)
+        super().__init__(storage_id)
         self._server = server
         self._user = user
         self._password = password
@@ -34,7 +34,7 @@ class RemoteStorage(Storage):
             try:
                 pkey = paramiko.RSAKey.from_private_key(private_key_file)
             except Exception as err:
-                raise RuntimeError("cannot parse private key (%s)" % str(err))
+                raise RuntimeError("cannot parse private key (%s)" % str(err)) from err
         self._pkey = pkey
         self._port = port
         self._ssh_client = None
@@ -87,7 +87,7 @@ class RemoteStorage(Storage):
                 client.get(remote_path, tmpfile.name, preserve_times=True)
             except Exception as err:
                 self._closeSCPClient()
-                raise
+                raise RuntimeError("cannot get file (%s)" % str(err)) from err
             shutil.move(tmpfile.name, local_path)
 
     def _check_existing_file(self, remote_path, local_path):
@@ -147,10 +147,10 @@ class RemoteStorage(Storage):
                             raise scp.SCPException(scp.asunicode(msg[1:]))
 
                     return generate()
-                except SocketTimeout:
+                except SocketTimeout as st:
                     channel.close()
                     self._closeSCPClient()
-                    raise scp.SCPException('Error receiving, socket.timeout')
+                    raise scp.SCPException('Error receiving, socket.timeout') from st
 
     def push_file(self, local_path, remote_path):
         self._connectSFTPClient().put(local_path, remote_path)
@@ -212,10 +212,10 @@ class RemoteStorage(Storage):
             return False
         return True
 
-    def isdir(self, path):
+    def isdir(self, remote_path):
         client = self._connectSFTPClient()
         try:
-            return S_ISDIR(client.stat(path).st_mode)
+            return S_ISDIR(client.stat(remote_path).st_mode)
         except IOError:
             return False
 
@@ -230,3 +230,27 @@ class RemoteStorage(Storage):
         if self._basedir:
             return os.path.relpath(path, self._basedir)
         return path
+
+    def _get_checksum_file(self, local_path):
+        pass
+
+    def delete_corpus_manager(self, corpus_id):
+        pass
+
+    def push_corpus_manager(self, local_path, remote_path, corpus_id, user_data):
+        pass
+
+    def search(self, remote_ids, search_query, nb_skip, nb_limit):
+        pass
+
+    def seg_add(self, corpus_id, segments):
+        pass
+
+    def seg_delete(self, corpus_id, seg_ids):
+        pass
+
+    def seg_modify(self, corpus_id, seg_id, tgt_id, tgt_seg, src_seg):
+        pass
+
+    def stream_corpus_manager(self, remote_id, remote_format, buffer_size=1024):
+        pass
