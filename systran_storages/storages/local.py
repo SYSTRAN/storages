@@ -33,7 +33,7 @@ class LocalStorage(Storage):
         return stat_remote.st_mtime == stat_local.st_mtime and\
             stat_remote.st_size == stat_local.st_size
 
-    def stream(self, remote_path, buffer_size=1024):
+    def stream(self, remote_path, buffer_size=1024, stream_format=None):
         def generate():
             """generator function to stream local file"""
             with open(remote_path, "rb") as f:

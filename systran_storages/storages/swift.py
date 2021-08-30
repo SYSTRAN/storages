@@ -95,7 +95,7 @@ class SwiftStorage(Storage):
             raise RuntimeError("Cannot push file [%s]>[%s]: %s" % (local_path, remote_path,
                                                                    "NO RESULTS"))
 
-    def stream(self, remote_path, buffer_size=1024):
+    def stream(self, remote_path, buffer_size=1024, stream_format=None):
         def generate():
             tmpdir = tempfile.mkdtemp()
             results = self._client.download(container=self._container,

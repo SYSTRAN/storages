@@ -150,12 +150,13 @@ class StorageClient:
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
         return client.stat(remote_path)
 
-    def stream(self, remote_path, buffer_size=1024, storage_id=None):
+    def stream(self, remote_path, buffer_size=1024, storage_id=None, stream_format=None):
         """Returns a generator to stream a remote_path file.
         `buffer_size` is the maximal size of each chunk
         """
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
-        return client.stream(remote_path, buffer_size)
+        return client.stream(remote_path, buffer_size, stream_format)
+
 
     def stream_corpus_manager(self, remote_path, remote_id, remote_format,
                               buffer_size=1024, storage_id=None):

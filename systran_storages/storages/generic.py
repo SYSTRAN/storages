@@ -165,7 +165,7 @@ class Storage:
                 raise RuntimeError('integrity check failed on %s' % local_path)
 
     @abc.abstractmethod
-    def stream(self, remote_path, buffer_size=1024):
+    def stream(self, remote_path, buffer_size=1024, stream_format=None):
         """return a generator on a remote file
         """
         raise NotImplementedError()
