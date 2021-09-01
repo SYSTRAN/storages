@@ -100,7 +100,7 @@ class S3Storage(Storage):
         except botocore.exceptions.ClientError:
             return False
 
-    def stream(self, remote_path, buffer_size=1024):
+    def stream(self, remote_path, buffer_size=1024, stream_format=None):
         body = self._s3.Object(self._bucket_name, remote_path).get()['Body']
 
         def generate():

@@ -108,7 +108,7 @@ class RemoteStorage(Storage):
         except IOError:
             return False
 
-    def stream(self, remote_path, buffer_size=1024):
+    def stream(self, remote_path, buffer_size=1024, stream_format=None):
         client = self._connectSCPClient()
         channel = client._open()
         channel.settimeout(client.socket_timeout)
