@@ -413,7 +413,7 @@ class CMStorages(Storage):
                 [
                     ('accountId', self.account_id),
                     ('format', format_path),
-                    ('importOptions', '{"cleanFormatting": true}'),
+                    ('importOptions', '{"cleanFormatting": true, "removeDuplicates":true}'),
                     ('filename', self._create_path_from_root(remote_path)),
                     ('corpus', data)
                 ]
@@ -470,7 +470,7 @@ class CMStorages(Storage):
                 [
                     ('accountId', self.account_id),
                     ('format', format_path),
-                    ('importOptions', '{"cleanFormatting": true}'),
+                    ('importOptions', '{"cleanFormatting": true, "removeDuplicates":true}'),
                     ('filename', self._create_path_from_root(remote_path)),
                     ('partition', data_partition_str),
                     ('corpus', data)
