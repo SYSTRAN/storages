@@ -227,7 +227,8 @@ class CMStorages(Storage):
                                          'last_modified': datetime_to_timestamp(
                                              date_time),
                                          'alias_names': [filename + "." + key.get('sourceLanguageCode', ''),
-                                                         filename + "." + (key.get('targetLanguageCodes')[0] if key.get('targetLanguageCodes') else '')]}
+                                                         filename + "." + (key.get('targetLanguageCodes')[0]
+                                                                           if key.get('targetLanguageCodes') else '')]}
                     if recursive:
                         folder = os.path.dirname(key['filename'][len(self.root_folder) + 1:])
                         all_dirs = folder.split("/")
