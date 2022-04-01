@@ -167,7 +167,7 @@ class CMStorages(Storage):
             format_path = 'application/x-tmx+xml'
         else:
             raise ValueError(
-                'cannot push %s, only support format of the corpus (application/x-tmx+xml, '
+                'Cannot push %s, only support format of the corpus (application/x-tmx+xml, '
                 'text/bitext)' % local_path)
 
         remote_path = '/' + self.root_folder + '/' + remote_path + os.path.basename(local_path)
@@ -269,7 +269,7 @@ class CMStorages(Storage):
             for key in list_objects["files"]:
                 if self._create_path_from_root(remote_path) == key.get("filename"):
                     return key
-        raise ValueError("corpus not found from remote_path: " + remote_path)
+        raise ValueError("Corpus not found from remote_path: " + remote_path)
 
     def rename(self, old_remote_path, new_remote_path):
         raise NotImplementedError()
@@ -407,7 +407,7 @@ class CMStorages(Storage):
                 format_path = 'application/x-tmx+xml'
             else:
                 raise ValueError(
-                    'cannot push %s, only support format of the corpus (application/x-tmx+xml, '
+                    'Cannot push %s, only support format of the corpus (application/x-tmx+xml, '
                     'text/bitext)' % local_path)
 
             mp_encoder = MultipartEncoder(
@@ -464,7 +464,7 @@ class CMStorages(Storage):
                 format_path = 'application/x-tmx+xml'
             else:
                 raise ValueError(
-                    'cannot push %s, only support format of the corpus (application/x-tmx+xml, '
+                    'Cannot push %s, only support format of the corpus (application/x-tmx+xml, '
                     'text/bitext)' % local_path)
 
             mp_encoder = MultipartEncoder(
@@ -480,8 +480,11 @@ class CMStorages(Storage):
             response = requests.post(self.host_url + '/corpus/import/partition', data=mp_encoder,
                                      headers={'Content-Type': mp_encoder.content_type})
             if response.status_code != 200:
-                raise ValueError(
-                    "Cannot import file '%s' in '%s'." % (local_path, remote_path))
+                error_message = json.loads(response.content).get('error')
+                if error_message:
+                    raise ValueError("Cannot import file(s) : %s" % error_message)
+                else:
+                    raise ValueError("Cannot import file '%s' in '%s'." % (local_path, remote_path))
             return response.json()
 
     def _create_path_from_root(self, remote_path):
