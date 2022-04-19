@@ -483,8 +483,7 @@ class CMStorages(Storage):
                 error_message = json.loads(response.content).get('error')
                 if error_message:
                     raise ValueError("Cannot import file(s) : %s" % error_message)
-                else:
-                    raise ValueError("Cannot import file '%s' in '%s'." % (local_path, remote_path))
+                raise ValueError("Cannot import file '%s' in '%s'." % (local_path, remote_path))
             return response.json()
 
     def _create_path_from_root(self, remote_path):
