@@ -140,7 +140,19 @@ class SwiftStorage(Storage):
         return lsdir
 
     def mkdir(self, remote_path):
-        pass
+        if not remote_path.endswith("/") and remote_path:
+            remote_path += "/"
+        if self.exists(remote_path):
+            return
+        obj = SwiftUploadObject(None, object_name=remote_path)
+        results = self._client.upload(self._container, [obj])
+        has_results = False
+        for r in results:
+            has_results = True
+            if not r["success"]:
+                raise RuntimeError("cannot create the directory %s: %s" % (remote_path, r["error"]))
+        if not has_results:
+            raise RuntimeError("cannot create the directory %s: %s" % (remote_path, "No results"))
 
     def _delete_single(self, remote_path, isdir):
         if not isdir:
