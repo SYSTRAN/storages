@@ -417,7 +417,9 @@ class CMStorages(Storage):
         response = requests.get(self.host_url + '/corpus/exists', params=data)
         return response.status_code == 200 and "true" in str(response.content)
 
-    def push_file(self, local_path, remote_path):
+    def push_file(self, local_path, remote_path, lp=None):
+        if lp is None:
+            lp = {}
         data = {
             'filename': self._create_path_from_root(remote_path),
             'accountId': self.account_id
@@ -437,12 +439,20 @@ class CMStorages(Storage):
                 raise ValueError(
                     'Cannot push %s, only support format of the corpus (application/x-tmx+xml, '
                     'text/bitext)' % local_path)
+            source = lp.get('source', '')
+            targets = lp.get('targets', [])
+            import_options = {
+                "cleanFormatting": True,
+                "removeDuplicates": True,
+                "expectedSourceLanguage": source,
+                "expectedTargetLanguages": targets
+            }
 
             mp_encoder = MultipartEncoder(
                 [
                     ('accountId', self.account_id),
                     ('format', format_path),
-                    ('importOptions', '{"cleanFormatting": true, "removeDuplicates":true}'),
+                    ('importOptions', json.dumps(import_options)),
                     ('filename', self._create_path_from_root(remote_path)),
                     ('corpus', data)
                 ]
@@ -450,11 +460,14 @@ class CMStorages(Storage):
             response = requests.post(self.host_url + '/corpus/import', data=mp_encoder,
                                      headers={'Content-Type': mp_encoder.content_type})
             if response.status_code != 200:
+                error_message = json.loads(response.content).get('error')
+                if error_message:
+                    raise ValueError("Cannot import file(s) : %s" % error_message)
                 raise ValueError(
                     "Cannot import file '%s' in '%s'." % (local_path, remote_path))
             return response.json()
 
-    def partition_auto(self, local_path, training_path, testing_path, partition_value, is_percent):
+    def partition_auto(self, local_path, training_path, testing_path, partition_value, is_percent, lp):
         remote_path = training_path + os.path.basename(local_path)
         training_file = training_path + os.path.basename(local_path)
         testing_file = testing_path + os.path.basename(local_path)
@@ -494,12 +507,20 @@ class CMStorages(Storage):
                 raise ValueError(
                     'Cannot push %s, only support format of the corpus (application/x-tmx+xml, '
                     'text/bitext)' % local_path)
+            source = lp.get('source', '')
+            targets = lp.get('targets', [])
+            import_options = {
+                "cleanFormatting": True,
+                "removeDuplicates": True,
+                "expectedSourceLanguage": source,
+                "expectedTargetLanguages": targets
+            }
 
             mp_encoder = MultipartEncoder(
                 [
                     ('accountId', self.account_id),
                     ('format', format_path),
-                    ('importOptions', '{"cleanFormatting": true, "removeDuplicates":true}'),
+                    ('importOptions', json.dumps(import_options)),
                     ('filename', self._create_path_from_root(remote_path)),
                     ('partition', data_partition_str),
                     ('corpus', data)
