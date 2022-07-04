@@ -284,20 +284,18 @@ class CMStorages(Storage):
             'accountId': self.account_id,
         }
 
-        data = None
         if search_query:
-            data = {
-                'ids': remote_ids,
+            query = {
                 'search': {}
             }
             if search_query.get('source') and search_query['source'].get('keyword'):
-                data['search']['srcQuery'] = search_query['source']['keyword']
+                query['search']['srcQuery'] = search_query['source']['keyword']
             if search_query.get('target') and search_query['target'].get('keyword'):
-                data['search']['tgtQuery'] = search_query['target']['keyword']
-        else:
-            params['id'] = remote_ids[0]
+                query['search']['tgtQuery'] = search_query['target']['keyword']
+            params['query'] = json.dumps(query)
 
-        response = requests.post(self.host_url + '/corpus/segment/list', json=data, params=params)
+        response = requests.post(self.host_url + '/corpus/segment/list', params=params,
+                                 files=[('id', id) for id in remote_ids])
         if response.status_code != 200:
             raise ValueError("Cannot list segment '%s' in '%s'." % (search_query, remote_ids))
         list_segment = response.json()
