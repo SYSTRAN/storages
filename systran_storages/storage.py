@@ -1,6 +1,7 @@
 """Client to abstract storage location: local, S3, SSH, etc."""
 import os
 import logging
+from dataclasses import dataclass
 
 from systran_storages import storages
 
@@ -279,3 +280,16 @@ class StorageClient:
         """Checks if file or directory exists on storage."""
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
         return client.exists(remote_path)
+
+    @dataclass
+    class SimilarSearchOptions:
+        srcLang: str
+        tgtLang: str
+        limit: int
+        searchSide: str
+        cleanNumeric: bool
+
+    def similar(self, remote_path, corpus_ids, search_options, input_corpus, output_corpus_name, storage_id=None):
+        """Extract a similar corpus from a large corpus dataset using an input corpus."""
+        client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
+        return client.similar(corpus_ids, search_options, input_corpus, output_corpus_name)

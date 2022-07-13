@@ -514,3 +514,21 @@ class CMStorages(Storage):
 
     def stat(self, remote_path):
         pass
+
+    def similar(self, corpus_ids, search_options, input_corpus, output_corpus_name):
+        params = (
+            ('accountId', self.account_id),
+            ('srcLang', search_options.srcLang),
+            ('tgtLang', search_options.tgtLang),
+            ('limit', search_options.limit),
+            ('searchSide', search_options.searchSide),
+            ('filename', output_corpus_name),
+            ('priority', 'composed')
+        )
+
+        response = requests.get(self.host_url + '/corpus/similar', params=params,
+                                files=[('id', id) for id in corpus_ids] + [('corpus', input_corpus)])
+        if response.status_code != 200:
+            raise RuntimeError(
+                'cannot start similar search "%s" (response code %d)' % (output_corpus_name, response.status_code))
+        return response.json()['id']
