@@ -24,13 +24,13 @@ class StorageClient:
         """Returns True if the path references a storage managed by this client."""
         if self._config is None:
             return False
-        fields = path.split(':')
+        fields = path.split(':', 1)
         return len(fields) == 2 and fields[0] in self._config
 
     @staticmethod
     def parse_managed_path(path):
         """Returns the storage ID and the full path from a managed path."""
-        fields = path.split(':')
+        fields = path.split(':', 1)
         return fields[0], fields[1]
 
     def _get_storage(self, path, storage_id=None):
@@ -38,9 +38,7 @@ class StorageClient:
         from the path. Defaults to the local filesystem.
         """
         if storage_id is None:
-            fields = path.split(':')
-            if len(fields) > 2:
-                raise ValueError('invalid path format: %s' % path)
+            fields = path.split(':', 1)
             if len(fields) == 2:
                 storage_id = fields[0]
                 path = fields[1]
