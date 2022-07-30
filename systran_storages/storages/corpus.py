@@ -282,20 +282,18 @@ class CMStorages(Storage):
             'skip': int(nb_skip),
             'limit': int(nb_limit),
             'accountId': self.account_id,
+            'id': remote_ids
         }
 
         data = None
         if search_query:
             data = {
-                'ids': remote_ids,
                 'search': {}
             }
             if search_query.get('source') and search_query['source'].get('keyword'):
                 data['search']['srcQuery'] = search_query['source']['keyword']
             if search_query.get('target') and search_query['target'].get('keyword'):
                 data['search']['tgtQuery'] = search_query['target']['keyword']
-        else:
-            params['id'] = remote_ids[0]
 
         response = requests.post(self.host_url + '/corpus/segment/list', json=data, params=params)
         if response.status_code != 200:
@@ -516,3 +514,22 @@ class CMStorages(Storage):
 
     def stat(self, remote_path):
         pass
+
+    def similar(self, corpus_ids, search_options, input_corpus, output_corpus_name):
+        params = {
+            'readOnlyAccountId': search_options.get('similar_base_account_id'),
+            'accountId': search_options.get('similar_result_account_id'),
+            'srcLang': search_options.get('srcLang'),
+            'tgtLang': search_options.get('tgtLang'),
+            'limit': search_options.get('limit'),
+            'searchSide': search_options.get('searchSide'),
+            'filename': output_corpus_name,
+            'priority': 'composed',
+            'id': corpus_ids
+        }
+
+        response = requests.post(self.host_url + '/corpus/similar', params=params, files=[('corpus', input_corpus)])
+        if response.status_code != 200:
+            raise RuntimeError(
+                'cannot start similar search "%s" (response code %d)' % (output_corpus_name, response.status_code))
+        return response.json()['id']
