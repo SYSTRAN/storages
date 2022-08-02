@@ -284,3 +284,13 @@ class StorageClient:
         """Extract a similar corpus from a large corpus dataset using an input corpus."""
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
         return client.similar(corpus_ids, search_options, input_corpus, output_corpus_name)
+
+    def tag_add(self, remote_path, corpus_id, tag, storage_id=None):
+        """Add a tag associated with a corpus."""
+        client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
+        return client.tag_add(corpus_id, tag)
+
+    def tag_remove(self, remote_path, corpus_id, tag, storage_id=None):
+        """Remove a tag associated with a corpus."""
+        client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
+        return client.tag_remove(corpus_id, tag)

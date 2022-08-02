@@ -222,6 +222,7 @@ class CMStorages(Storage):
                                          'id': key.get('id'),
                                          'type': self.resource_type,
                                          'status': key.get('status'),
+                                         'tags': key.get('tags'),
                                          'sourceLanguage': key.get('sourceLanguage'),
                                          'targetLanguages': key.get('targetLanguages'),
                                          'last_modified': datetime_to_timestamp(
@@ -517,19 +518,34 @@ class CMStorages(Storage):
 
     def similar(self, corpus_ids, search_options, input_corpus, output_corpus_name):
         params = {
-            'readOnlyAccountId': search_options.get('similar_base_account_id'),
-            'accountId': search_options.get('similar_result_account_id'),
-            'srcLang': search_options.get('srcLang'),
-            'tgtLang': search_options.get('tgtLang'),
-            'limit': search_options.get('limit'),
-            'searchSide': search_options.get('searchSide'),
+            **search_options,
             'filename': output_corpus_name,
-            'priority': 'composed',
             'id': corpus_ids
         }
-
         response = requests.post(self.host_url + '/corpus/similar', params=params, files=[('corpus', input_corpus)])
         if response.status_code != 200:
             raise RuntimeError(
                 'cannot start similar search "%s" (response code %d)' % (output_corpus_name, response.status_code))
         return response.json()['id']
+
+    def tag_add(self, corpus_id, tag):
+        params = {
+            'accountId': self.account_id,
+            'id': corpus_id
+        }
+        response = requests.post(self.host_url + '/corpus/tags/' + tag, params=params)
+        if response.status_code != 200:
+            raise ValueError(
+                "Cannot add tag '%s' in '%s'." % (tag, corpus_id))
+        return response.json()
+
+    def tag_remove(self, corpus_id, tag):
+        params = {
+            'accountId': self.account_id,
+            'id': corpus_id
+        }
+        response = requests.delete(self.host_url + '/corpus/tags/' + tag, params=params)
+        if response.status_code != 200:
+            raise ValueError(
+                "Cannot remove tag '%s' in '%s'." % (tag, corpus_id))
+        return response.json()
