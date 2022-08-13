@@ -222,6 +222,7 @@ class CMStorages(Storage):
                                          'id': key.get('id'),
                                          'type': self.resource_type,
                                          'status': key.get('status'),
+                                         'tags': key.get('tags'),
                                          'sourceLanguage': key.get('sourceLanguage'),
                                          'targetLanguages': key.get('targetLanguages'),
                                          'last_modified': datetime_to_timestamp(
@@ -282,20 +283,18 @@ class CMStorages(Storage):
             'skip': int(nb_skip),
             'limit': int(nb_limit),
             'accountId': self.account_id,
+            'id': remote_ids
         }
 
         data = None
         if search_query:
             data = {
-                'ids': remote_ids,
                 'search': {}
             }
             if search_query.get('source') and search_query['source'].get('keyword'):
                 data['search']['srcQuery'] = search_query['source']['keyword']
             if search_query.get('target') and search_query['target'].get('keyword'):
                 data['search']['tgtQuery'] = search_query['target']['keyword']
-        else:
-            params['id'] = remote_ids[0]
 
         response = requests.post(self.host_url + '/corpus/segment/list', json=data, params=params)
         if response.status_code != 200:
@@ -516,3 +515,37 @@ class CMStorages(Storage):
 
     def stat(self, remote_path):
         pass
+
+    def similar(self, corpus_ids, search_options, input_corpus, output_corpus_name):
+        params = {
+            **search_options,
+            'filename': output_corpus_name,
+            'id': corpus_ids
+        }
+        response = requests.post(self.host_url + '/corpus/similar', params=params, files=[('corpus', input_corpus)])
+        if response.status_code != 200:
+            raise RuntimeError(
+                'cannot start similar search "%s" (response code %d)' % (output_corpus_name, response.status_code))
+        return response.json()['id']
+
+    def tag_add(self, corpus_id, tag):
+        params = {
+            'accountId': self.account_id,
+            'id': corpus_id
+        }
+        response = requests.post(self.host_url + '/corpus/tags/' + tag, params=params)
+        if response.status_code != 200:
+            raise ValueError(
+                "Cannot add tag '%s' in '%s'." % (tag, corpus_id))
+        return response.json()
+
+    def tag_remove(self, corpus_id, tag):
+        params = {
+            'accountId': self.account_id,
+            'id': corpus_id
+        }
+        response = requests.delete(self.host_url + '/corpus/tags/' + tag, params=params)
+        if response.status_code != 200:
+            raise ValueError(
+                "Cannot remove tag '%s' in '%s'." % (tag, corpus_id))
+        return response.json()
