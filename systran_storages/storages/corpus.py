@@ -525,7 +525,7 @@ class CMStorages(Storage):
         response = requests.post(self.host_url + '/corpus/similar', params=params, files=[('corpus', input_corpus)])
         if response.status_code != 200:
             raise RuntimeError(
-                'cannot start similar search "%s" (response code %d)' % (output_corpus_name, response.status_code))
+                'Cannot start similar search. %s' % response.text)
         return response.json()['id']
 
     def tag_add(self, corpus_id, tag):
@@ -549,3 +549,11 @@ class CMStorages(Storage):
             raise ValueError(
                 "Cannot remove tag '%s' in '%s'." % (tag, corpus_id))
         return response.json()
+
+    def detail(self, corpus_id):
+        params = {
+            'accountId': self.account_id,
+            'id': corpus_id
+        }
+        response = requests.get(self.host_url + '/corpus/details', params=params)
+        return response.json().get('files')
