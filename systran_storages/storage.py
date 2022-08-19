@@ -292,3 +292,8 @@ class StorageClient:
         """Remove a tag associated with a corpus."""
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
         return client.tag_remove(corpus_id, tag)
+
+    def detail(self, remote_path, corpus_id, storage_id=None):
+        """Return the details of the corpus."""
+        client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
+        return client.detail(corpus_id)
