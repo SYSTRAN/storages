@@ -133,7 +133,7 @@ class CMStorages(Storage):
     def stream_corpus_manager(self, remote_id, remote_format, buffer_size=1024):
         if remote_format == "" or remote_format is None:
             remote_format = "text/bitext"
-        if remote_format not in ['application/x-tmx+xml', 'text/bitext']:
+        if remote_format not in ['application/x-tmx+xml', 'text/bitext', 'systran/edition-corpus']:
             raise RuntimeError(
                 'Error format file %s, only support format of the corpus (application/x-tmx+xml, '
                 'text/bitext)' % remote_format)
@@ -288,28 +288,40 @@ class CMStorages(Storage):
             'accountId': self.account_id,
             'id': remote_ids
         }
-
+        is_async_mode = False
         data = None
         if search_query:
+            if search_query.get('filename'):
+                is_async_mode = True
+                params['filename'] = search_query['filename']
+
+            if search_query.get('source_language'):
+                params['srcLang'] = search_query['source_language']
+            if search_query.get('target_language'):
+                params['tgtLang'] = search_query['target_language']
+
             data = {
                 'search': {}
             }
             if search_query.get('source') and search_query['source'].get('keyword'):
                 data['search']['srcQuery'] = search_query['source']['keyword']
+                if search_query['source'].get('is_regex_search'):
+                    data['search'].update({'srcIsRegex': True})
             if search_query.get('target') and search_query['target'].get('keyword'):
                 data['search']['tgtQuery'] = search_query['target']['keyword']
+                if search_query['target'].get('is_regex_search'):
+                    data['search'].update({'tgtIsRegex': True})
 
         response = requests.post(self.host_url + '/corpus/segment/list', json=data, params=params)
         if response.status_code != 200:
             raise ValueError("Cannot list segment '%s' in '%s'." % (search_query, remote_ids))
-        list_segment = response.json()
-        for segment in list_segment.get("segments"):
-            if segment.get("corpus"):
-                for corpus in segment["corpus"]:
-                    corpus["filename"] = corpus["filename"].replace("/" + self.root_folder, "")
-        if "error" in list_segment:
-            raise ValueError("Cannot list segment '%s' in '%s'." % (remote_ids, list_segment['error']))
-        return list_segment.get("segments"), list_segment.get('total')
+
+        json_response = response.json()
+        if "error" in json_response:
+            raise ValueError("Cannot list segment '%s' in '%s'." % (remote_ids, json_response['error']))
+        if is_async_mode:
+            return json_response
+        return json_response.get("segments"), json_response.get('total')
 
     def seg_delete(self, corpus_id, seg_ids):
         deleted_seg = 0
