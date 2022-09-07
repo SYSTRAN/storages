@@ -196,7 +196,7 @@ class CMStorages(Storage):
             'directory': self._create_path_from_root(remote_path),
             'accountId': self.account_id
         }
-        if recursive:
+        if recursive or is_file:
             data = {
                 'prefix': self._create_path_from_root(remote_path),
                 'accountId': self.account_id
