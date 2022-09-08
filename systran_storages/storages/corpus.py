@@ -187,7 +187,7 @@ class CMStorages(Storage):
         status = "id" in response.json()
         return status
 
-    def listdir(self, remote_path, recursive=False, is_file=False):
+    def listdir(self, remote_path, recursive=False, is_file=False, options=None):
         if not is_file and not remote_path.endswith('/'):
             remote_path += '/'
         listdir = {}
@@ -201,6 +201,9 @@ class CMStorages(Storage):
                 'prefix': self._create_path_from_root(remote_path),
                 'accountId': self.account_id
             }
+
+        if options:
+            data.update(options)
 
         response = requests.get(self.host_url + '/corpus/list', params=data)
 

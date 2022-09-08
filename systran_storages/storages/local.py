@@ -63,7 +63,7 @@ class LocalStorage(Storage):
             return {'size': stat.st_size, 'last_modified': stat.st_mtime}
         return False
 
-    def listdir(self, remote_path, recursive=False, is_file=False):
+    def listdir(self, remote_path, recursive=False, is_file=False, options=None):
         listfile = {}
 
         if is_file:
