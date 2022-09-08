@@ -219,7 +219,7 @@ class Storage:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def listdir(self, remote_path, recursive=False, is_file=False):
+    def listdir(self, remote_path, recursive=False, is_file=False, options=None):
         """Return a list with all files and directory in the remote directory
            The files have full path, directory ends with trailing /
         """

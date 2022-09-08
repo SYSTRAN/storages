@@ -117,7 +117,7 @@ class SwiftStorage(Storage):
 
         return generate()
 
-    def listdir(self, remote_path, recursive=False, is_file=False):
+    def listdir(self, remote_path, recursive=False, is_file=False, options=None):
         if not is_file and remote_path != '' and not remote_path.endswith('/'):
             remote_path += '/'
         options = {"prefix": remote_path}

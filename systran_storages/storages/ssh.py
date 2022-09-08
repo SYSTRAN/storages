@@ -189,7 +189,7 @@ class RemoteStorage(Storage):
         getfiles_rec(remote_path)
         return listfile
 
-    def listdir(self, remote_path, recursive=False, is_file=False):
+    def listdir(self, remote_path, recursive=False, is_file=False, options=None):
         client = self._connectSFTPClient()
         return self._ls(client, remote_path, recursive, is_file)
 
