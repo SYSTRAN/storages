@@ -534,10 +534,10 @@ class CMStorages(Storage):
     def similar(self, corpus_ids, search_options, input_corpus, output_corpus_name):
         params = {
             **search_options,
-            'filename': output_corpus_name,
-            'id': corpus_ids
+            'filename': output_corpus_name
         }
-        response = requests.post(self.host_url + '/corpus/similar', params=params, files=[('corpus', input_corpus)])
+        response = requests.post(self.host_url + '/corpus/similar', params=params, data={'id': corpus_ids},
+                                 files=[('corpus', input_corpus)])
         if response.status_code != 200:
             raise RuntimeError(
                 'Cannot start similar search. %s' % response.text)
