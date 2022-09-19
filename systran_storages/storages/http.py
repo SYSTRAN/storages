@@ -34,6 +34,9 @@ class HTTPStorage(Storage):
         # not optimized for http download yet
         return False
 
+    def _get_checksum_file(self, local_path):
+        return None
+
     def stream(self, remote_path, buffer_size=1024, stream_format=None):
         res = requests.get(self._pattern_get % remote_path, stream=True)
         if res.status_code != 200:
