@@ -282,23 +282,22 @@ class CMStorages(Storage):
         return True
 
     def search(self, remote_ids, search_query=None, nb_skip=0, nb_limit=0):
-        params = {
-            'skip': int(nb_skip),
-            'limit': int(nb_limit),
-            'accountId': self.account_id,
-            'id': remote_ids
-        }
+        mp_encoder_content = [
+            ('skip', str(int(nb_skip))),
+            ('limit', str(int(nb_limit))),
+            ('accountId', self.account_id)
+        ]
+        for rid in remote_ids:
+            mp_encoder_content.append(('id', rid))
         is_async_mode = False
-        data = None
         if search_query:
             if search_query.get('filename'):
                 is_async_mode = True
-                params['filename'] = search_query['filename']
-
+                mp_encoder_content.append(('filename', search_query['filename']))
             if search_query.get('source_language'):
-                params['srcLang'] = search_query['source_language']
+                mp_encoder_content.append(('srcLang', search_query['source_language']))
             if search_query.get('target_language'):
-                params['tgtLang'] = search_query['target_language']
+                mp_encoder_content.append(('tgtLang', search_query['target_language']))
 
             data = {
                 'search': {}
@@ -312,7 +311,12 @@ class CMStorages(Storage):
                 if search_query['target'].get('is_regex_search'):
                     data['search'].update({'tgtIsRegex': True})
 
-        response = requests.post(self.host_url + '/corpus/segment/list', json=data, params=params)
+            if data.get('search'):
+                mp_encoder_content.append(('query', json.dumps(data)))
+
+        mp_encoder = MultipartEncoder(mp_encoder_content)
+        response = requests.request('POST', self.host_url + '/corpus/segment/list', data=mp_encoder,
+                                    headers={'Content-Type': mp_encoder.content_type})
         if response.status_code != 200:
             raise ValueError("Cannot list segment '%s' in '%s'." % (search_query, remote_ids))
 
@@ -544,22 +548,22 @@ class CMStorages(Storage):
         return response.json()['id']
 
     def tag_add(self, corpus_id, tag):
-        params = {
+        data = {
             'accountId': self.account_id,
             'id': corpus_id
         }
-        response = requests.post(self.host_url + '/corpus/tags/' + tag, params=params)
+        response = requests.post(self.host_url + '/corpus/tags/' + tag, data=data)
         if response.status_code != 200:
             raise ValueError(
                 "Cannot add tag '%s' in '%s'." % (tag, corpus_id))
         return response.json()
 
     def tag_remove(self, corpus_id, tag):
-        params = {
+        data = {
             'accountId': self.account_id,
             'id': corpus_id
         }
-        response = requests.delete(self.host_url + '/corpus/tags/' + tag, params=params)
+        response = requests.delete(self.host_url + '/corpus/tags/' + tag, data=data)
         if response.status_code != 200:
             raise ValueError(
                 "Cannot remove tag '%s' in '%s'." % (tag, corpus_id))
