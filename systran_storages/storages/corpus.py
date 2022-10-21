@@ -291,6 +291,10 @@ class CMStorages(Storage):
             mp_encoder_content.append(('id', rid))
         is_async_mode = False
         if search_query:
+            if search_query.get('searchMode'):
+                mp_encoder_content.append(('searchMode', search_query['searchMode']))
+            if search_query.get('xmlEscape'):
+                mp_encoder_content.append(('xmlEscape', search_query['xmlEscape']))
             if search_query.get('filename'):
                 is_async_mode = True
                 mp_encoder_content.append(('filename', search_query['filename']))
