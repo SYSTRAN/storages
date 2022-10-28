@@ -310,10 +310,12 @@ class CMStorages(Storage):
                 data['search']['srcQuery'] = search_query['source']['keyword']
                 if search_query['source'].get('is_regex_search'):
                     data['search'].update({'srcIsRegex': True})
+                    data['search']['srcIsCaseInsensitive'] = search_query['source'].get('isCaseInsensitive')
             if search_query.get('target') and search_query['target'].get('keyword'):
                 data['search']['tgtQuery'] = search_query['target']['keyword']
                 if search_query['target'].get('is_regex_search'):
                     data['search'].update({'tgtIsRegex': True})
+                    data['search']['tgtIsCaseInsensitive'] = search_query['target'].get('isCaseInsensitive')
 
             if data.get('search'):
                 mp_encoder_content.append(('query', json.dumps(data)))
