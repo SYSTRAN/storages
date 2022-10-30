@@ -298,6 +298,10 @@ class CMStorages(Storage):
             if search_query.get('filename'):
                 is_async_mode = True
                 mp_encoder_content.append(('filename', search_query['filename']))
+                if search_query.get('accountId'):
+                    mp_encoder_content.remove(('accountId', self.account_id))
+                    mp_encoder_content.append(('readOnlyAccountId', self.account_id))
+                    mp_encoder_content.append(('accountId', search_query['accountId']))
             if search_query.get('source_language'):
                 mp_encoder_content.append(('srcLang', search_query['source_language']))
             if search_query.get('target_language'):
