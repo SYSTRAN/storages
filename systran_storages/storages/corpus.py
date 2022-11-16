@@ -225,6 +225,7 @@ class CMStorages(Storage):
                                          'id': key.get('id'),
                                          'type': self.resource_type,
                                          'status': key.get('status'),
+                                         'errorDesc': key.get('errorDesc', ''),
                                          'tags': key.get('tags'),
                                          'sourceLanguage': key.get('sourceLanguage'),
                                          'targetLanguages': key.get('targetLanguages'),
