@@ -155,7 +155,6 @@ class StorageClient:
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
         return client.stream(remote_path, buffer_size, stream_format)
 
-
     def stream_corpus_manager(self, remote_path, remote_id, remote_format,
                               buffer_size=1024, storage_id=None):
         """Returns a generator to stream a remote_path file for Corpus Manager storage.
@@ -164,7 +163,7 @@ class StorageClient:
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
         return client.stream_corpus_manager(remote_id, remote_format, buffer_size)
 
-    def push(self, local_path, remote_path, storage_id=None):
+    def push(self, local_path, remote_path, storage_id=None, lp=None):
         """Pushes a local_path file or directory to storage."""
         if not os.path.exists(local_path):
             raise RuntimeError('%s not found' % local_path)
@@ -172,7 +171,7 @@ class StorageClient:
             return None
         LOGGER.info('Uploading %s to %s', local_path, remote_path)
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
-        return client.push(local_path, remote_path)
+        return client.push(local_path, remote_path, lp=lp)
 
     def push_corpus_manager(self, local_path, remote_path, corpus_id, user_data, storage_id=None):
         """Pushes a local_path file or directory to storage."""
@@ -185,10 +184,11 @@ class StorageClient:
         client.push_corpus_manager(local_path, remote_path, corpus_id, user_data)
         return None
 
-    def partition_auto(self, data, training_path, testing_path, remote_path, storage_id, partition_value, is_percent):
+    def partition_auto(self, data, training_path, testing_path, remote_path, storage_id, partition_value, is_percent,
+                       lp):
         LOGGER.info('Partitioning %s in %s to %s', str(data), training_path, testing_path)
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
-        return client.partition_auto(data, training_path, testing_path, partition_value, is_percent)
+        return client.partition_auto(data, training_path, testing_path, partition_value, is_percent, lp)
 
     def mkdir(self, local_path, remote_path, storage_id=None):
         """Pushes a local_path file or directory to storage."""
