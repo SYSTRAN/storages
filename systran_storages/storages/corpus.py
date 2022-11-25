@@ -440,14 +440,14 @@ class CMStorages(Storage):
                 raise ValueError(
                     'Cannot push %s, only support format of the corpus (application/x-tmx+xml, '
                     'text/bitext)' % local_path)
-            source = lp.get('source', '')
-            targets = lp.get('targets', [])
             import_options = {
                 "cleanFormatting": True,
-                "removeDuplicates": True,
-                "expectedSourceLanguage": source,
-                "expectedTargetLanguages": targets
+                "removeDuplicates": True
             }
+
+            if lp:
+                import_options["expectedSourceLanguage"] = lp.get('source', '')
+                import_options["expectedTargetLanguages"] = lp.get('targets', [])
 
             mp_encoder = MultipartEncoder(
                 [
@@ -508,14 +508,14 @@ class CMStorages(Storage):
                 raise ValueError(
                     'Cannot push %s, only support format of the corpus (application/x-tmx+xml, '
                     'text/bitext)' % local_path)
-            source = lp.get('source', '')
-            targets = lp.get('targets', [])
             import_options = {
                 "cleanFormatting": True,
-                "removeDuplicates": True,
-                "expectedSourceLanguage": source,
-                "expectedTargetLanguages": targets
+                "removeDuplicates": True
             }
+
+            if lp:
+                import_options["expectedSourceLanguage"] = lp.get('source', '')
+                import_options["expectedTargetLanguages"] = lp.get('targets', [])
 
             mp_encoder = MultipartEncoder(
                 [
