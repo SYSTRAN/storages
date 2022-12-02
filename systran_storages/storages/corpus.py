@@ -12,6 +12,8 @@ from requests_toolbelt.multipart import decoder
 from systran_storages.storages import Storage
 from systran_storages.storages.utils import datetime_to_timestamp
 
+from server.utils.common import get_pretty_error_message
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -74,7 +76,7 @@ class CMStorages(Storage):
                     filename += tgt_extension
                 else:
                     filename += src_extension
-            if (filename.endswith(src_extension) and part_index == 0) or\
+            if (filename.endswith(src_extension) and part_index == 0) or \
                     (filename.endswith(tgt_extension) and part_index == 1):
                 with open(filename, "wb") as file_writer:
                     file_writer.write(part.content)
@@ -225,7 +227,7 @@ class CMStorages(Storage):
                                          'id': key.get('id'),
                                          'type': self.resource_type,
                                          'status': key.get('status'),
-                                         'errorDesc': key.get('errorDesc', ''),
+                                         'errorDesc': get_pretty_error_message(key.get('errorDesc', '')),
                                          'tags': key.get('tags'),
                                          'sourceLanguage': key.get('sourceLanguage'),
                                          'targetLanguages': key.get('targetLanguages'),
@@ -463,7 +465,7 @@ class CMStorages(Storage):
             if response.status_code != 200:
                 error_message = json.loads(response.content).get('error')
                 if error_message:
-                    raise ValueError("Cannot import file(s) : %s" % error_message)
+                    raise ValueError(get_pretty_error_message(error_message))
                 raise ValueError(
                     "Cannot import file '%s' in '%s'." % (local_path, remote_path))
             return response.json()
@@ -480,8 +482,8 @@ class CMStorages(Storage):
 
         if is_percent:
             data_partition = [
-                                {'segments': str(100-partition_value), 'filename': str(training_file)},
-                                {'segments': str(partition_value), 'filename': str(testing_file)}
+                {'segments': str(100 - partition_value), 'filename': str(training_file)},
+                {'segments': str(partition_value), 'filename': str(testing_file)}
             ]
         else:
             data_partition = {
@@ -532,7 +534,7 @@ class CMStorages(Storage):
             if response.status_code != 200:
                 error_message = json.loads(response.content).get('error')
                 if error_message:
-                    raise ValueError("Cannot import file(s) : %s" % error_message)
+                    raise ValueError(get_pretty_error_message(error_message))
                 raise ValueError("Cannot import file '%s' in '%s'." % (local_path, remote_path))
             return response.json()
 
@@ -552,7 +554,7 @@ class CMStorages(Storage):
             p = return_value.rfind('.txt.')
             corpus_format = '.txt'
         if p > -1:
-            return return_value[0:p+len(corpus_format)]
+            return return_value[0:p + len(corpus_format)]
         return return_value
 
     def _internal_path(self, path):
