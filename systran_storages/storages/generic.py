@@ -4,8 +4,9 @@ import contextlib
 import shutil
 import logging
 import platform
-
 import six
+if platform.system() != 'Windows':
+    import fcntl
 
 LOGGER = logging.getLogger(__name__)
 
@@ -28,7 +29,6 @@ def lock(fname):
 
     # fcntl module doesn't support on window os
     if platform.system() != 'Windows':
-        import fcntl
         lock_file = os.path.join(dname, '%s.lock' % basename)
         with open(lock_file, 'w') as f:
             fcntl.lockf(f, fcntl.LOCK_EX)
