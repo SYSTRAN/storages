@@ -97,7 +97,6 @@ class StorageClient:
                 client = self._storages[storage_id]
         else:
             client = storages.LocalStorage()
-
         return client, client._internal_path(path)
 
     def join(self, path, *paths):
@@ -154,6 +153,16 @@ class StorageClient:
         """
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
         return client.stream(remote_path, buffer_size, stream_format)
+
+    def bulk_modify(self, file, lp, storage_id='regex_corpus_result', remote_path=''):
+        """Returns a generator to stream a remote_path file.
+        `buffer_size` is the maximal size of each chunk
+        """
+        if storage_id != 'regex_corpus_result':
+            raise ValueError(
+                "The segments update feature isn't available on an other storage than corpus manager")
+        client, _ = self._get_storage(remote_path, storage_id=storage_id)
+        return client.bulk_modify(lp, file)
 
     def stream_corpus_manager(self, remote_path, remote_id, remote_format,
                               buffer_size=1024, storage_id=None):

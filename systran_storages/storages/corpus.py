@@ -608,3 +608,27 @@ class CMStorages(Storage):
         }
         response = requests.get(self.host_url + '/corpus/details', params=params)
         return response.json().get('files')
+
+    def bulk_modify(self, lp, corpus):
+        source_language = lp.get('source')
+        target_language = lp.get('target')
+        params = {
+            'accountId': self.account_id,
+            'shouldCheckId': "false",
+            'srcLang': source_language,
+            'tgtLang': target_language
+        }
+        corpus = corpus.read().decode()
+        mp_encoder = MultipartEncoder(
+            [
+                ('corpus', corpus)
+            ]
+        )
+        response = requests.get(self.host_url + '/corpus/segment/bulk', params=params, data=mp_encoder,
+                                headers={'Content-Type': mp_encoder.content_type})
+        if response.status_code != 200:
+            error_message = json.loads(response.content).get('error')
+            if error_message:
+                raise ValueError("Cannot update the segments in corpus manager : %s" % error_message)
+            raise ValueError("Cannot update the segments in corpus manager")
+        return response.json()
