@@ -39,7 +39,7 @@ class StorageClient:
         """
         if storage_id is None:
             fields = path.split(':', 1)
-            if len(fields) == 2:
+            if len(fields) == 2 and len(fields[0]) > 1:
                 storage_id = fields[0]
                 path = fields[1]
 
