@@ -505,6 +505,42 @@ class CMStorages(Storage):
                 raise ValueError("Cannot import file '%s' in '%s'." % (local_path, remote_path))
             return response.json()
 
+    def partition_from_selected_corpus(self, corpus_id, account_id, training_file, testing_file,
+                                       partition_value, is_percent):
+        data_partition = {
+            'partition': [],
+            'readOnlyAccountId': self.account_id,
+            'accountId': account_id,
+            'id': corpus_id
+        }
+        if is_percent or partition_value == 0:
+            data_partition['usePercentage'] = True
+            if partition_value == 100:
+                data_partition['partition'] = [
+                    {'segments': str(partition_value), 'filename': str(testing_file)}
+                ]
+            elif partition_value == 0:
+                data_partition['partition'] = [
+                    {'segments': str(100 - partition_value), 'filename': str(training_file)}
+                ]
+            else:
+                data_partition['partition'] = [
+                    {'segments': str(100 - partition_value), 'filename': str(training_file)},
+                    {'segments': str(partition_value), 'filename': str(testing_file)}
+                ]
+        else:
+            data_partition['partition'] = [
+                {'segments': 'remains', 'filename': str(training_file)},
+                {'segments': str(partition_value), 'filename': str(testing_file)}
+            ]
+        response = requests.post(self.host_url + '/corpus/partition', json=data_partition)
+        if response.status_code != 200:
+            error_message = json.loads(response.content).get('error')
+            if error_message:
+                raise ValueError("Cannot partition corpus : %s" % error_message)
+            raise ValueError("Cannot partition corpus")
+        return response.json()
+
     def _create_path_from_root(self, remote_path):
         """ Remove the extension (.json or .{lang}) of the remote path if this path was generated
             from the corpus in the corpus manager storage.
