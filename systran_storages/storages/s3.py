@@ -11,6 +11,9 @@ import boto3
 from systran_storages.storages.utils import datetime_to_timestamp
 from systran_storages.storages import Storage
 
+for logger_name in ("boto3", "botocore", "s3transfer", "urllib3"):
+    logging.getLogger(logger_name).setLevel(logging.CRITICAL)
+
 LOGGER = logging.getLogger(__name__)
 
 
