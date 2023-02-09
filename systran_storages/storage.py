@@ -155,6 +155,12 @@ class StorageClient:
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
         return client.stream(remote_path, buffer_size, stream_format)
 
+    def bulk_modify(self, file, lp, storage_id, remote_path=''):
+        """Returns a json result of corpus updating
+        """
+        client, _ = self._get_storage(remote_path, storage_id=storage_id)
+        return client.bulk_modify(lp, file)
+
     def stream_corpus_manager(self, remote_path, remote_id, remote_format,
                               buffer_size=1024, storage_id=None):
         """Returns a generator to stream a remote_path file for Corpus Manager storage.
