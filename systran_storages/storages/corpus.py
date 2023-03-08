@@ -7,7 +7,6 @@ import uuid
 
 import requests
 from requests_toolbelt.multipart.encoder import MultipartEncoder
-from requests_toolbelt.multipart import decoder
 
 from systran_storages.storages import Storage
 from systran_storages.storages.utils import datetime_to_timestamp
@@ -52,32 +51,24 @@ class CMStorages(Storage):
         params = {
             'accountId': self.account_id,
             'id': corpus.get("id"),
-            'format': "text/monolingual"
+            'format': "application/json"
         }
 
-        response = requests.get(self.host_url + '/corpus/export', params=params)
+        corpus_detail_response = requests.get(self.host_url + '/corpus/details', params=params)
+        if corpus_detail_response.status_code != 200:
+            raise RuntimeError('cannot get corpus details from %s (response code %d)' % (
+             remote_path, corpus_detail_response.status_code))
+        metadata_filename = local_path.split('.')[0] + '_metadata.json'
+        with open(metadata_filename, "w") as file_writer:
+            file_writer.write(corpus_detail_response.text)
 
-        if response.status_code != 200:
+        corpus_export_response = requests.get(self.host_url + '/corpus/export', params=params)
+        if corpus_export_response.status_code != 200:
             raise RuntimeError(
-                'cannot not get %s (response code %d)' % (remote_path, response.status_code))
-        if "multipart/mixed" not in response.headers.get("Content-Type"):
-            with open(local_path, "wb") as file_writer:
-                file_writer.write(response.content)
-                return
-        multipart_data = decoder.MultipartDecoder.from_response(response)
-        for part_index, part in enumerate(multipart_data.parts):
-            filename = local_path
-            src_extension = "." + corpus.get("sourceLanguageCode")
-            tgt_extension = "." + corpus.get("targetLanguageCodes")[0]
-            if local_path.endswith('.tmx') or local_path.endswith('.txt'):
-                if part_index == 1:
-                    filename += tgt_extension
-                else:
-                    filename += src_extension
-            if (filename.endswith(src_extension) and part_index == 0) or\
-                    (filename.endswith(tgt_extension) and part_index == 1):
-                with open(filename, "wb") as file_writer:
-                    file_writer.write(part.content)
+                'cannot get %s (response code %d)' % (remote_path, corpus_export_response.status_code))
+        json_filename = local_path.split('.')[0] + '.json'
+        with open(json_filename, "w") as file_writer:
+            file_writer.write(corpus_export_response.text)
 
     def _get_checksum_from_database(self, remote_path):
         corpus = self._get_corpus_info_from_remote_path(remote_path)
