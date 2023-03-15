@@ -53,12 +53,15 @@ class CMStorages(Storage):
             'id': corpus.get("id"),
             'format': "application/json"
         }
+        (local_dir, basename) = os.path.split(local_path)
+        if '.' in basename:
+            basename = basename[:basename.rfind('.')]
 
         corpus_detail_response = requests.get(self.host_url + '/corpus/details', params=params)
         if corpus_detail_response.status_code != 200:
             raise RuntimeError('cannot get corpus details from %s (response code %d)' % (
              remote_path, corpus_detail_response.status_code))
-        metadata_filename = local_path.split('.')[0] + '_metadata.json'
+        metadata_filename = os.path.join(local_dir, "." + basename + ".metadata")
         with open(metadata_filename, "w") as file_writer:
             file_writer.write(corpus_detail_response.text)
 
@@ -66,7 +69,7 @@ class CMStorages(Storage):
         if corpus_export_response.status_code != 200:
             raise RuntimeError(
                 'cannot get %s (response code %d)' % (remote_path, corpus_export_response.status_code))
-        json_filename = local_path.split('.')[0] + '.json'
+        json_filename = os.path.join(local_dir, basename + ".json")
         with open(json_filename, "w") as file_writer:
             file_writer.write(corpus_export_response.text)
 
