@@ -4,6 +4,7 @@ from datetime import datetime
 import logging
 import os
 import uuid
+from operator import itemgetter
 
 import requests
 from requests_toolbelt.multipart.encoder import MultipartEncoder
@@ -540,13 +541,12 @@ class CMStorages(Storage):
             return '/'
         if return_value.endswith('.tmx') or return_value.endswith('.txt') or return_value.endswith('/'):
             return return_value
-        p = return_value.rfind('.tmx.')
-        corpus_format = '.tmx'
-        if return_value.rfind('.txt.') > p:
-            p = return_value.rfind('.txt.')
-            corpus_format = '.txt'
-        if p > -1:
-            return return_value[0:p+len(corpus_format)]
+        custom_suffixes = ['.tmx.', '.txt.', '.json.']
+        suffix_positions = [(return_value.rfind(suffix), suffix[:-1]) for suffix in custom_suffixes]
+        max_suffix_position = max(suffix_positions, key=itemgetter(0))
+        if max_suffix_position[0] > -1:
+            return return_value[0:max_suffix_position[0] + len(max_suffix_position[1])]
+
         return return_value
 
     def _internal_path(self, path):
