@@ -155,16 +155,7 @@ class CMStorages(Storage):
                                           buffer_size)
 
     def push_corpus_manager(self, local_path, remote_path, corpus_id, user_data):
-
-        if local_path.endswith(".txt"):
-            format_path = 'text/bitext'
-        elif local_path.endswith(".tmx"):
-            format_path = 'application/x-tmx+xml'
-        else:
-            raise ValueError(
-                'Cannot push %s, only support format of the corpus (application/x-tmx+xml, '
-                'text/bitext)' % local_path)
-
+        format_path = self._get_format_from_local_path(local_path)
         remote_path = '/' + self.root_folder + '/' + remote_path + os.path.basename(local_path)
         files = {
             'filename': (None, remote_path),
@@ -427,14 +418,7 @@ class CMStorages(Storage):
                                % remote_path)
         with open(local_path, "rb") as f:
             data = f.read()
-            if local_path.endswith(".txt"):
-                format_path = 'text/bitext'
-            elif local_path.endswith(".tmx"):
-                format_path = 'application/x-tmx+xml'
-            else:
-                raise ValueError(
-                    'Cannot push %s, only support format of the corpus (application/x-tmx+xml, '
-                    'text/bitext)' % local_path)
+            format_path = self._get_format_from_local_path(local_path)
             import_options = {
                 "cleanFormatting": True,
                 "removeDuplicates": True
@@ -495,14 +479,7 @@ class CMStorages(Storage):
                                % remote_path)
         with open(local_path, "rb") as f:
             data = f.read()
-            if local_path.endswith(".txt"):
-                format_path = 'text/bitext'
-            elif local_path.endswith(".tmx"):
-                format_path = 'application/x-tmx+xml'
-            else:
-                raise ValueError(
-                    'Cannot push %s, only support format of the corpus (application/x-tmx+xml, '
-                    'text/bitext)' % local_path)
+            format_path = self._get_format_from_local_path(local_path)
             import_options = {
                 "cleanFormatting": True,
                 "removeDuplicates": True
@@ -603,7 +580,6 @@ class CMStorages(Storage):
         response = requests.get(self.host_url + '/corpus/details', params=params)
         return response.json().get('files')
 
-
     def bulk_modify(self, lp, corpus):
         source_language = lp.get('source')
         target_language = lp.get('target')
@@ -627,3 +603,18 @@ class CMStorages(Storage):
                 raise ValueError("Cannot update the segments in corpus manager : %s" % error_message)
             raise ValueError("Cannot update the segments in corpus manager")
         return response.json()
+
+    @staticmethod
+    def _get_format_from_local_path(local_path):
+        if local_path.endswith(".txt"):
+            format_path = 'text/bitext'
+        elif local_path.endswith(".tmx"):
+            format_path = 'application/x-tmx+xml'
+        elif local_path.endswith(".json"):
+            format_path = 'application/json'
+        else:
+            raise ValueError(
+                'Cannot push %s, only support format of the corpus (application/x-tmx+xml, '
+                'text/bitext, application/json)' % local_path)
+
+        return format_path
