@@ -13,6 +13,7 @@ from systran_storages.storages import Storage
 from systran_storages.storages.utils import datetime_to_timestamp
 
 LOGGER = logging.getLogger(__name__)
+CORPUS_SUFFIX = (".txt", ".tmx", ".json")
 
 
 class CMStorages(Storage):
@@ -38,14 +39,14 @@ class CMStorages(Storage):
         self._get_checksum_file_safe(remote_path, local_path)
 
     @staticmethod
-    def _get_checksum_file_name(local_path):
+    def _get_checksum_file(local_path):
         (local_dir, basename) = os.path.split(local_path)
         return os.path.join(local_dir, "." + basename + ".md5")
 
-    def _get_checksum_file(self, local_path):
-        if not local_path.endswith(".txt") and not local_path.endswith(".tmx"):
-            local_path = local_path[:-3]
-        return self._get_checksum_file_name(local_path)
+    @staticmethod
+    def _get_metadata_file(local_path):
+        (local_dir, basename) = os.path.split(local_path)
+        return os.path.join(local_dir, "." + basename + ".metadata")
 
     def _get_main_file_safe(self, remote_path, local_path):
         corpus = self._get_corpus_info_from_remote_path(remote_path)
@@ -55,14 +56,13 @@ class CMStorages(Storage):
             'format': "application/json"
         }
         (local_dir, basename) = os.path.split(local_path)
-        if '.' in basename:
-            basename = basename[:basename.rfind('.')]
+        metadata_filename = os.path.join(local_dir, "." + basename + ".metadata")
 
         corpus_detail_response = requests.get(self.host_url + '/corpus/details', params=params)
         if corpus_detail_response.status_code != 200:
             raise RuntimeError('cannot get corpus details from %s (response code %d)' % (
              remote_path, corpus_detail_response.status_code))
-        metadata_filename = os.path.join(local_dir, "." + basename + ".metadata")
+        LOGGER.info('Downloading metadata of %s to %s', remote_path, metadata_filename)
         with open(metadata_filename, "w") as file_writer:
             file_writer.write(corpus_detail_response.text)
 
@@ -70,6 +70,8 @@ class CMStorages(Storage):
         if corpus_export_response.status_code != 200:
             raise RuntimeError(
                 'cannot get %s (response code %d)' % (remote_path, corpus_export_response.status_code))
+        if basename.endswith(CORPUS_SUFFIX):
+            basename = basename[:basename.rfind('.')]
         json_filename = os.path.join(local_dir, basename + ".json")
         with open(json_filename, "w") as file_writer:
             file_writer.write(corpus_export_response.text)
@@ -98,22 +100,21 @@ class CMStorages(Storage):
 
     def _get_checksum_file_safe(self, remote_path, local_path):
         file_checksum = self._get_checksum_from_database(remote_path)
-        with open(self._get_checksum_file_name(local_path), "w") as file_writer:
+        with open(self._get_checksum_file(local_path), "w") as file_writer:
             file_writer.write(file_checksum)
 
     @staticmethod
     def _alias_files_exist(local_path):
-        dirname = os.path.dirname(local_path)
-        number_of_files = 0
-        for filename in os.listdir(dirname):
-            complete_filename = os.path.join(dirname, filename)
-            if complete_filename.startswith(local_path) and len(complete_filename) == len(local_path) + 3:
-                number_of_files += 1
-        return number_of_files == 2
+        if local_path.endswith(CORPUS_SUFFIX):
+            json_format_path = local_path[:local_path.rfind('.')] + '.json'
+        else:
+            json_format_path = local_path + '.json'
+        return os.path.exists(json_format_path)
 
     def _check_existing_file(self, remote_path, local_path):
         checksum_path = self._get_checksum_file(local_path)
-        if self._alias_files_exist(local_path) and os.path.exists(checksum_path):
+        metadata_path = self._get_metadata_file(local_path)
+        if self._alias_files_exist(local_path) and os.path.exists(metadata_path) and os.path.exists(checksum_path):
             with open(checksum_path) as f:
                 checksum_from_file = f.read()
             checksum_from_database = self._get_checksum_from_database(remote_path)
@@ -206,6 +207,10 @@ class CMStorages(Storage):
                 if remote_path in key['filename']:
                     date_time = datetime.strptime(key["createdAt"].strip(), "%a %b %d %H:%M:%S %Y")
                     filename = key["filename"][len(self.root_folder) + 1:]
+                    if filename.endswith(CORPUS_SUFFIX):
+                        json_format_name = filename[:filename.rfind('.')] + '.json'
+                    else:
+                        json_format_name = filename + '.json'
                     listdir[filename] = {'entries': int(key.get('nbSegments')) if key.get('nbSegments') else None,
                                          'format': key.get('format'),
                                          'id': key.get('id'),
@@ -217,9 +222,7 @@ class CMStorages(Storage):
                                          'targetLanguages': key.get('targetLanguages'),
                                          'last_modified': datetime_to_timestamp(
                                              date_time),
-                                         'alias_names': [filename + "." + key.get('sourceLanguageCode', ''),
-                                                         filename + "." + (key.get('targetLanguageCodes')[0]
-                                                                           if key.get('targetLanguageCodes') else '')]}
+                                         'alias_names': [json_format_name]}
                     if recursive:
                         folder = os.path.dirname(key['filename'][len(self.root_folder) + 1:])
                         all_dirs = folder.split("/")
@@ -518,7 +521,7 @@ class CMStorages(Storage):
             return '/'
         if return_value.endswith('.tmx') or return_value.endswith('.txt') or return_value.endswith('/'):
             return return_value
-        custom_suffixes = ['.tmx.', '.txt.', '.json.']
+        custom_suffixes = [suffix + '.' for suffix in CORPUS_SUFFIX]
         suffix_positions = [(return_value.rfind(suffix), suffix[:-1]) for suffix in custom_suffixes]
         max_suffix_position = max(suffix_positions, key=itemgetter(0))
         if max_suffix_position[0] > -1:

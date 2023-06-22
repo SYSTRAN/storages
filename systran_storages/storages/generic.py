@@ -149,9 +149,12 @@ class Storage:
                             extra_path = os.path.join(local_path, extra_subpath)
                             if extra_path in allfiles:
                                 del allfiles[extra_path]
-                                checksum_file = self._get_checksum_file(extra_path)
+                                checksum_file = self._get_checksum_file(path)
                                 if checksum_file is not None and checksum_file in allfiles:
                                     del allfiles[checksum_file]
+                                metadata_file = self._get_metadata_file(path)
+                                if metadata_file is not None and metadata_file in allfiles:
+                                    del allfiles[metadata_file]
                     else:
                         if path in allfiles:
                             del allfiles[path]
