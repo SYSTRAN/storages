@@ -35,6 +35,7 @@ class CMStorages(Storage):
             raise ValueError('http storage %s can not handle host url' % self._storage_id)
 
     def _get_file_safe(self, remote_path, local_path):
+        local_path = self._create_path_from_root(local_path)
         self._get_main_file_safe(remote_path, local_path)
         self._get_checksum_file_safe(remote_path, local_path)
 
@@ -70,9 +71,7 @@ class CMStorages(Storage):
         if corpus_export_response.status_code != 200:
             raise RuntimeError(
                 'cannot get %s (response code %d)' % (remote_path, corpus_export_response.status_code))
-        if basename.endswith(CORPUS_SUFFIX):
-            basename = basename[:basename.rfind('.')]
-        json_filename = os.path.join(local_dir, basename + ".json")
+        json_filename = local_path + '.json'
         with open(json_filename, "w") as file_writer:
             file_writer.write(corpus_export_response.text)
 
@@ -105,13 +104,11 @@ class CMStorages(Storage):
 
     @staticmethod
     def _alias_files_exist(local_path):
-        if local_path.endswith(CORPUS_SUFFIX):
-            json_format_path = local_path[:local_path.rfind('.')] + '.json'
-        else:
-            json_format_path = local_path + '.json'
+        json_format_path = local_path + '.json'
         return os.path.exists(json_format_path)
 
     def _check_existing_file(self, remote_path, local_path):
+        local_path = self._create_path_from_root(local_path)
         checksum_path = self._get_checksum_file(local_path)
         metadata_path = self._get_metadata_file(local_path)
         if self._alias_files_exist(local_path) and os.path.exists(metadata_path) and os.path.exists(checksum_path):
@@ -207,10 +204,7 @@ class CMStorages(Storage):
                 if remote_path in key['filename']:
                     date_time = datetime.strptime(key["createdAt"].strip(), "%a %b %d %H:%M:%S %Y")
                     filename = key["filename"][len(self.root_folder) + 1:]
-                    if filename.endswith(CORPUS_SUFFIX):
-                        json_format_name = filename[:filename.rfind('.')] + '.json'
-                    else:
-                        json_format_name = filename + '.json'
+                    json_format_name = filename + '.json'
                     listdir[filename] = {'entries': int(key.get('nbSegments')) if key.get('nbSegments') else None,
                                          'format': key.get('format'),
                                          'id': key.get('id'),
