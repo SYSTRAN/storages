@@ -506,6 +506,12 @@ class CMStorages(Storage):
             return response.json()
 
     def _create_path_from_root(self, remote_path):
+        """ Remove the extension (.json or .{lang}) of the remote path if this path was generated
+            from the corpus in the corpus manager storage.
+            Example: /train/training_upload.txt => /train/training_upload.txt
+                     /train/training_upload.txt.json => /train/training_upload.txt
+                     /train/training_upload.json.json => /train/training_upload.json
+        """
         return_value = ''
         if self.root_folder != '':
             return_value = '/' + self.path_without_starting_slash(self.root_folder)
