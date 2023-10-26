@@ -127,7 +127,8 @@ class CMStorages(Storage):
     def stream_corpus_manager(self, remote_id, remote_format, buffer_size=1024):
         if remote_format == "" or remote_format is None:
             remote_format = "text/bitext"
-        if remote_format not in ['application/x-tmx+xml', 'text/bitext', 'systran/edition-corpus', 'application/json']:
+        if remote_format not in ['application/x-tmx+xml', 'text/bitext', 'systran/tsv-edition-corpus',
+                                 'systran/json-edition-corpus', 'application/json']:
             raise RuntimeError(
                 'Error format file %s, only support format of the corpus (application/x-tmx+xml, '
                 'text/bitext)' % remote_format)
