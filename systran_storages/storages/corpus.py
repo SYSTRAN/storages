@@ -54,7 +54,8 @@ class CMStorages(Storage):
         params = {
             'accountId': self.account_id,
             'id': corpus.get("id"),
-            'format': "application/json"
+            'format': "application/json",
+            'byChunk': "true"
         }
         (local_dir, basename) = os.path.split(local_path)
         metadata_filename = os.path.join(local_dir, "." + basename + ".metadata")
@@ -130,11 +131,15 @@ class CMStorages(Storage):
             raise RuntimeError(
                 'Error format file %s, only support format of the corpus (application/x-tmx+xml, '
                 'text/bitext)' % remote_format)
-        params = (
-            ('accountId', self.account_id),
-            ('id', remote_id),
-            ('format', remote_format),
-        )
+        params = {
+            'accountId': self.account_id,
+            'id': remote_id,
+            'format': remote_format
+        }
+        # add option byChunk=True (consume less memory) to avoid crash when downloading too large corpus
+        # only available for JSON format
+        if remote_format == 'application/json':
+            params["byChunk"] = "true"
 
         response = requests.get(self.host_url + '/corpus/export', params=params)
         if response.status_code != 200:
