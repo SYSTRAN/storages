@@ -424,7 +424,8 @@ class CMStorages(Storage):
             format_path = self._get_format_from_local_path(local_path)
             import_options = {
                 "cleanFormatting": True,
-                "removeDuplicates": True
+                "removeDuplicates": True,
+                "tidyLocale": True
             }
 
             if lp:
@@ -485,7 +486,8 @@ class CMStorages(Storage):
             format_path = self._get_format_from_local_path(local_path)
             import_options = {
                 "cleanFormatting": True,
-                "removeDuplicates": True
+                "removeDuplicates": True,
+                "tidyLocale": True
             }
 
             if lp:
