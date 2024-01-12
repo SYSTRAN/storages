@@ -50,7 +50,7 @@ class CMStorages(Storage):
         return os.path.join(local_dir, "." + basename + ".metadata")
 
     def _get_main_file_safe(self, remote_path, local_path):
-        corpus = self._get_corpus_info_from_remote_path(remote_path)
+        corpus = self._get_corpus_info_from_remote_path(remote_path, only_success_corpus=True)
         params = {
             'accountId': self.account_id,
             'id': corpus.get("id"),
@@ -77,7 +77,7 @@ class CMStorages(Storage):
             file_writer.write(corpus_export_response.text)
 
     def _get_checksum_from_database(self, remote_path):
-        corpus = self._get_corpus_info_from_remote_path(remote_path)
+        corpus = self._get_corpus_info_from_remote_path(remote_path, only_success_corpus=True)
         params = {
             'accountId': self.account_id,
             'id': corpus.get("id")
@@ -252,7 +252,7 @@ class CMStorages(Storage):
         status = response.ok
         return status
 
-    def _get_corpus_info_from_remote_path(self, remote_path):
+    def _get_corpus_info_from_remote_path(self, remote_path, only_success_corpus=None):
         data = {
             'prefix': self._create_path_from_root(remote_path),
             'accountId': self.account_id
@@ -262,7 +262,10 @@ class CMStorages(Storage):
         if "files" in list_objects:
             for key in list_objects["files"]:
                 if self._create_path_from_root(remote_path) == key.get("filename"):
-                    return key
+                    if not only_success_corpus:
+                        return key
+                    elif key.get('status') not in ['error', 'pending']:
+                        return key
         raise ValueError("Corpus not found from remote_path: " + remote_path)
 
     def rename(self, old_remote_path, new_remote_path):
