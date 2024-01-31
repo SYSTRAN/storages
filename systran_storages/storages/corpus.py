@@ -264,7 +264,7 @@ class CMStorages(Storage):
                 if self._create_path_from_root(remote_path) == key.get("filename"):
                     if not only_success_corpus:
                         return key
-                    elif key.get('status') not in ['error', 'pending']:
+                    if key.get('status') not in ['error', 'pending']:
                         return key
         raise ValueError("Corpus not found from remote_path: " + remote_path)
 
