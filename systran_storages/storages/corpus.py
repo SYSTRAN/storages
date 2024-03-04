@@ -13,7 +13,7 @@ from systran_storages.storages import Storage
 from systran_storages.storages.utils import datetime_to_timestamp
 
 LOGGER = logging.getLogger(__name__)
-CORPUS_SUFFIX = (".txt", ".tmx", ".json")
+CORPUS_SUFFIX = (".txt", ".tmx", ".json", ".tsv", ".jsonl")
 
 
 class CMStorages(Storage):
@@ -127,11 +127,11 @@ class CMStorages(Storage):
     def stream_corpus_manager(self, remote_id, remote_format, buffer_size=1024):
         if remote_format == "" or remote_format is None:
             remote_format = "text/bitext"
-        if remote_format not in ['application/x-tmx+xml', 'text/bitext', 'systran/tsv-edition-corpus',
-                                 'systran/json-edition-corpus', 'application/json']:
+        if remote_format not in ['application/x-tmx+xml', 'text/bitext', 'application/json', 'systran/tsv-edition-corpus',
+                                 'systran/json-edition-corpus']:
             raise RuntimeError(
                 'Error format file %s, only support format of the corpus (application/x-tmx+xml, '
-                'text/bitext)' % remote_format)
+                'text/bitext, application/json, systran/tsv-edition-corpus, systran/json-edition-corpus)' % remote_format)
         params = {
             'accountId': self.account_id,
             'id': remote_id,
@@ -595,13 +595,15 @@ class CMStorages(Storage):
         return response.json().get('files')
 
     def bulk_modify(self, lp, corpus):
+        format_path = self._get_edition_format_from_local_path(corpus.filename)
         source_language = lp.get('source')
         target_language = lp.get('target')
         params = {
             'accountId': self.account_id,
             'shouldCheckId': "false",
             'srcLang': source_language,
-            'tgtLang': target_language
+            'tgtLang': target_language,
+            'format': format_path
         }
         corpus = corpus.read().decode()
         mp_encoder = MultipartEncoder(
@@ -630,5 +632,18 @@ class CMStorages(Storage):
             raise ValueError(
                 'Cannot push %s, only support format of the corpus (application/x-tmx+xml, '
                 'text/bitext, application/json)' % local_path)
+
+        return format_path
+
+    @staticmethod
+    def _get_edition_format_from_local_path(local_path):
+        if local_path.endswith((".json", ".jsonl")):
+            format_path = 'systran/json-edition-corpus'
+        elif local_path.endswith(".tsv"):
+            format_path = 'systran/tsv-edition-corpus'
+        else:
+            raise ValueError(
+                'Cannot edit with %s, only support format of the corpus ('
+                'systran/tsv-edition-corpus, systran/json-edition-corpus)' % local_path)
 
         return format_path
