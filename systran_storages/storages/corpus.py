@@ -127,11 +127,11 @@ class CMStorages(Storage):
     def stream_corpus_manager(self, remote_id, remote_format, buffer_size=1024):
         if remote_format == "" or remote_format is None:
             remote_format = "text/bitext"
-        if remote_format not in ['application/x-tmx+xml', 'text/bitext', 'application/json', 'systran/tsv-edition-corpus',
-                                 'systran/json-edition-corpus']:
+        if remote_format not in ['application/x-tmx+xml', 'text/bitext', 'application/json',
+                                 'systran/tsv-edition-corpus', 'systran/json-edition-corpus']:
             raise RuntimeError(
-                'Error format file %s, only support format of the corpus (application/x-tmx+xml, '
-                'text/bitext, application/json, systran/tsv-edition-corpus, systran/json-edition-corpus)' % remote_format)
+                'Error format file %s, only support format of the corpus (application/x-tmx+xml, text/bitext, '
+                'application/json, systran/tsv-edition-corpus, systran/json-edition-corpus)' % remote_format)
         params = {
             'accountId': self.account_id,
             'id': remote_id,
@@ -222,6 +222,12 @@ class CMStorages(Storage):
                                          'targetLanguages': key.get('targetLanguages'),
                                          'last_modified': datetime_to_timestamp(
                                              date_time),
+                                         'license': key.get('license', ''),
+                                         'publisher': key.get('publisher', ''),
+                                         'source': key.get('source', ''),
+                                         'notes': json.dumps(key.get('notes', {})),
+                                         'genre': key.get('genre', ''),
+                                         'domain': key.get('domain', ''),
                                          'alias_names': [json_format_name]}
                     if recursive:
                         folder = os.path.dirname(key['filename'][len(self.root_folder) + 1:])
@@ -619,6 +625,35 @@ class CMStorages(Storage):
                 raise ValueError("Cannot update the segments in corpus manager : %s" % error_message)
             raise ValueError("Cannot update the segments in corpus manager")
         return response.json()
+
+    def edit_properties(self, remote_path, corpus_license, publisher, source, domain, genre, notes):
+        corpus = self._get_corpus_info_from_remote_path(remote_path)
+
+        params = {
+            'accountId': self.account_id,
+            'id': corpus.get('id')
+        }
+        if corpus_license:
+            params['license'] = corpus_license
+        if publisher:
+            params['publisher'] = publisher
+        if source:
+            params['source'] = source
+        if domain:
+            params['domain'] = domain
+        if genre:
+            params['genre'] = genre
+        if notes:
+            params['notes'] = notes
+
+        response = requests.get(self.host_url + '/corpus/edit/properties', params=params)
+        if response.status_code != 200:
+            error_message = json.loads(response.content).get('error')
+            if error_message:
+                raise ValueError("Cannot edit properties in corpus manager : %s" % error_message)
+            raise ValueError("Cannot edit properties in corpus manager")
+        status = response.ok
+        return status
 
     @staticmethod
     def _get_format_from_local_path(local_path):
