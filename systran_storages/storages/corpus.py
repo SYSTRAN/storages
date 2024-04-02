@@ -626,13 +626,15 @@ class CMStorages(Storage):
             raise ValueError("Cannot update the segments in corpus manager")
         return response.json()
 
-    def edit_properties(self, remote_path, corpus_license, publisher, source, domain, genre, notes):
+    def edit_properties(self, remote_path, filename, corpus_license, publisher, source, domain, genre, notes):
         corpus = self._get_corpus_info_from_remote_path(remote_path)
 
         params = {
             'accountId': self.account_id,
             'id': corpus.get('id')
         }
+        if filename:
+            params["filename"] = filename
         if corpus_license:
             params['license'] = corpus_license
         if publisher:
