@@ -161,9 +161,10 @@ class StorageClient:
         client, _ = self._get_storage(remote_path, storage_id=storage_id)
         return client.bulk_modify(lp, file)
 
-    def edit_properties(self, corpus_license, publisher, source, domain, genre, notes, remote_path, storage_id=None):
+    def edit_properties(self, filename, corpus_license, publisher, source, domain, genre, notes,
+                        remote_path, storage_id=None):
         client, _ = self._get_storage(remote_path, storage_id=storage_id)
-        return client.edit_properties(remote_path, corpus_license, publisher, source, domain, genre, notes)
+        return client.edit_properties(remote_path, filename, corpus_license, publisher, source, domain, genre, notes)
 
     def stream_corpus_manager(self, remote_path, remote_id, remote_format,
                               buffer_size=1024, storage_id=None):
