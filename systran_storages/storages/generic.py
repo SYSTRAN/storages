@@ -164,6 +164,8 @@ class Storage:
                     self._sync_file(internal_path, path)
             for f in allfiles:
                 os.remove(f)
+            if allfiles:
+                LOGGER.info('Delete files that exist in local but not in remote storage: %s' % list(allfiles.keys()))
             if check_integrity_fn is not None and not check_integrity_fn(local_path):
                 try:
                     shutil.rmtree(local_path)

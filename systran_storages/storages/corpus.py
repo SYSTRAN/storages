@@ -196,6 +196,9 @@ class CMStorages(Storage):
             data.update(options)
 
         response = requests.get(self.host_url + '/corpus/list', params=data)
+        if response.status_code != 200:
+            raise RuntimeError(
+                "Cannot list corpus from remote path: %s (response code %d)" % (remote_path, response.status_code))
 
         list_objects = response.json()
         if 'directories' in list_objects:
