@@ -55,7 +55,8 @@ class CMStorages(Storage):
             'accountId': self.account_id,
             'id': corpus.get("id"),
             'format': "systran/sampler-corpus",
-            'byChunk': "true"
+            'byChunk': "true",
+            'isGzip': "true",
         }
         (local_dir, basename) = os.path.split(local_path)
         metadata_filename = os.path.join(local_dir, "." + basename + ".metadata")
@@ -72,9 +73,9 @@ class CMStorages(Storage):
         if corpus_export_response.status_code != 200:
             raise RuntimeError(
                 'cannot get %s (response code %d)' % (remote_path, corpus_export_response.status_code))
-        json_filename = local_path + '.jsonl'
-        with open(json_filename, "w") as file_writer:
-            file_writer.write(corpus_export_response.text)
+        json_filename = local_path + '.jsonl.gz'
+        with open(json_filename, "wb") as file_writer:
+            file_writer.write(corpus_export_response.content)
 
     def _get_checksum_from_database(self, remote_path):
         corpus = self._get_corpus_info_from_remote_path(remote_path, only_success_corpus=True)
