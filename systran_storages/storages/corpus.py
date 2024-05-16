@@ -54,7 +54,7 @@ class CMStorages(Storage):
         params = {
             'accountId': self.account_id,
             'id': corpus.get("id"),
-            'format': "application/json",
+            'format': "systran/sampler-corpus",
             'byChunk': "true"
         }
         (local_dir, basename) = os.path.split(local_path)
@@ -72,7 +72,7 @@ class CMStorages(Storage):
         if corpus_export_response.status_code != 200:
             raise RuntimeError(
                 'cannot get %s (response code %d)' % (remote_path, corpus_export_response.status_code))
-        json_filename = local_path + '.json'
+        json_filename = local_path + '.jsonl'
         with open(json_filename, "w") as file_writer:
             file_writer.write(corpus_export_response.text)
 
