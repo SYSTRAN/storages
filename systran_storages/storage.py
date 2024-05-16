@@ -117,9 +117,9 @@ class StorageClient:
         return ("%s:" % prefix,) + client.split(rel_path)
 
     # Simple wrappers around get().
-    def get_file(self, remote_path, local_path, storage_id=None):
+    def get_file(self, remote_path, local_path, storage_id=None, workers=1):
         """Retrieves a file from remote_path to local_path."""
-        return self.get(remote_path, local_path, directory=False, storage_id=storage_id)
+        return self.get(remote_path, local_path, directory=False, storage_id=storage_id, workers=workers)
 
     def get_directory(self, remote_path, local_path, storage_id=None):
         """Retrieves a full directory from remote_path to local_path."""
@@ -130,7 +130,8 @@ class StorageClient:
             local_path,
             directory=False,
             storage_id=None,
-            check_integrity_fn=None):
+            check_integrity_fn=None,
+            workers=1):
         """Retrieves file or directory from remote_path to local_path."""
         LOGGER.info('Synchronizing %s to %s', remote_path, local_path)
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
@@ -138,7 +139,8 @@ class StorageClient:
             remote_path,
             local_path,
             directory=directory,
-            check_integrity_fn=check_integrity_fn)
+            check_integrity_fn=check_integrity_fn,
+            workers=workers)
         if not os.path.exists(local_path):
             raise RuntimeError('Failed to synchronize %s' % local_path)
 

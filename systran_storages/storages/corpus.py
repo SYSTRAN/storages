@@ -54,8 +54,9 @@ class CMStorages(Storage):
         params = {
             'accountId': self.account_id,
             'id': corpus.get("id"),
-            'format': "application/json",
-            'byChunk': "true"
+            'format': "systran/sampler-corpus",
+            'byChunk': "true",
+            'isGzip': "true",
         }
         (local_dir, basename) = os.path.split(local_path)
         metadata_filename = os.path.join(local_dir, "." + basename + ".metadata")
@@ -72,9 +73,9 @@ class CMStorages(Storage):
         if corpus_export_response.status_code != 200:
             raise RuntimeError(
                 'cannot get %s (response code %d)' % (remote_path, corpus_export_response.status_code))
-        json_filename = local_path + '.json'
-        with open(json_filename, "w") as file_writer:
-            file_writer.write(corpus_export_response.text)
+        json_filename = local_path + '.jsonl.gz'
+        with open(json_filename, "wb") as file_writer:
+            file_writer.write(corpus_export_response.content)
 
     def _get_checksum_from_database(self, remote_path):
         corpus = self._get_corpus_info_from_remote_path(remote_path, only_success_corpus=True)
@@ -105,7 +106,7 @@ class CMStorages(Storage):
 
     @staticmethod
     def _alias_files_exist(local_path):
-        json_format_path = local_path + '.json'
+        json_format_path = local_path + '.jsonl.gz'
         return os.path.exists(json_format_path)
 
     def _check_existing_file(self, remote_path, local_path):
@@ -214,7 +215,7 @@ class CMStorages(Storage):
                     date_time = key["updatedAt"] if "updatedAt" in key else key["createdAt"]
                     date_time = datetime.strptime(date_time.strip(), "%a %b %d %H:%M:%S %Y")
                     filename = key["filename"][len(self.root_folder) + 1:]
-                    json_format_name = filename + '.json'
+                    jsonl_format_name = filename + '.jsonl.gz'
                     listdir[filename] = {'entries': int(key.get('nbSegments')) if key.get('nbSegments') else None,
                                          'format': key.get('format'),
                                          'id': key.get('id'),
@@ -232,7 +233,7 @@ class CMStorages(Storage):
                                          'notes': json.dumps(key.get('notes', {})),
                                          'genre': key.get('genre', ''),
                                          'domain': key.get('domain', ''),
-                                         'alias_names': [json_format_name]}
+                                         'alias_names': [jsonl_format_name]}
                     if recursive:
                         folder = os.path.dirname(key['filename'][len(self.root_folder) + 1:])
                         all_dirs = folder.split("/")
