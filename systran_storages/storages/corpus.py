@@ -211,7 +211,8 @@ class CMStorages(Storage):
         if 'files' in list_objects:
             for key in list_objects['files']:
                 if remote_path in key['filename']:
-                    date_time = datetime.strptime(key["createdAt"].strip(), "%a %b %d %H:%M:%S %Y")
+                    date_time = key["updatedAt"] if "updatedAt" in key else key["createdAt"]
+                    date_time = datetime.strptime(date_time.strip(), "%a %b %d %H:%M:%S %Y")
                     filename = key["filename"][len(self.root_folder) + 1:]
                     json_format_name = filename + '.json'
                     listdir[filename] = {'entries': int(key.get('nbSegments')) if key.get('nbSegments') else None,
