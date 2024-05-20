@@ -216,6 +216,7 @@ class CMStorages(Storage):
                     date_time = datetime.strptime(date_time.strip(), "%a %b %d %H:%M:%S %Y")
                     filename = key["filename"][len(self.root_folder) + 1:]
                     json_format_name = filename + '.json'
+                    jsonl_format_name = filename + '.jsonl.gz'
                     listdir[filename] = {'entries': int(key.get('nbSegments')) if key.get('nbSegments') else None,
                                          'format': key.get('format'),
                                          'id': key.get('id'),
