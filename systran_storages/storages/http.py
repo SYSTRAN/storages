@@ -49,7 +49,7 @@ class HTTPStorage(Storage):
 
         return generate()
 
-    def push_file(self, local_path, remote_path):
+    def push_file(self, local_path, remote_path, lp=None, is_advanced=False):
         if self._pattern_push is None:
             raise ValueError('http storage %s can not handle post requests' % self._storage_id)
         with open(local_path, "rb") as f:

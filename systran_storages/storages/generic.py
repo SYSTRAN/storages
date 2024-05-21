@@ -185,12 +185,12 @@ class Storage:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def push_file(self, local_path, remote_path, lp=None):
+    def push_file(self, local_path, remote_path, lp=None, is_advanced=False):
         """Push a local file on a remote storage path
         """
         raise NotImplementedError()
 
-    def push(self, local_path, remote_path, lp=None):
+    def push(self, local_path, remote_path, lp=None, is_advanced=False):
         """Push a file or directory on a remote storage
         """
         if os.path.isfile(local_path):
@@ -199,9 +199,7 @@ class Storage:
             dirname = os.path.dirname(remote_path)
             self.mkdir(dirname)
             LOGGER.info('Uploading file %s to %s', local_path, remote_path)
-            if lp:
-                return self.push_file(local_path, remote_path, lp)
-            return self.push_file(local_path, remote_path)
+            return self.push_file(local_path, remote_path, lp, is_advanced=is_advanced)
 
         def push_rec(local_path, remote_path):
             files = os.listdir(local_path)
@@ -213,7 +211,7 @@ class Storage:
                 if os.path.isdir(local_filepath):
                     push_rec(local_filepath, remote_filepath)
                 else:
-                    self.push(local_filepath, remote_filepath)
+                    self.push(local_filepath, remote_filepath, lp, is_advanced=is_advanced)
 
         push_rec(local_path, remote_path)
         return None

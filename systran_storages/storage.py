@@ -174,7 +174,7 @@ class StorageClient:
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
         return client.stream_corpus_manager(remote_id, remote_format, buffer_size)
 
-    def push(self, local_path, remote_path, storage_id=None, lp=None):
+    def push(self, local_path, remote_path, storage_id=None, lp=None, is_advanced=False):
         """Pushes a local_path file or directory to storage."""
         if not os.path.exists(local_path):
             raise RuntimeError('%s not found' % local_path)
@@ -182,7 +182,7 @@ class StorageClient:
             return None
         LOGGER.info('Uploading %s to %s', local_path, remote_path)
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
-        return client.push(local_path, remote_path, lp=lp)
+        return client.push(local_path, remote_path, lp=lp, is_advanced=is_advanced)
 
     def push_corpus_manager(self, local_path, remote_path, corpus_id, user_data, storage_id=None):
         """Pushes a local_path file or directory to storage."""

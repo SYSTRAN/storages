@@ -79,7 +79,7 @@ class SwiftStorage(Storage):
                 return {'is_dir': True}
         return False
 
-    def push_file(self, local_path, remote_path):
+    def push_file(self, local_path, remote_path, lp=None, is_advanced=False):
         (_, basename) = os.path.split(local_path)
         if not remote_path:
             remote_path = basename

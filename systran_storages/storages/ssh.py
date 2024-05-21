@@ -152,7 +152,7 @@ class RemoteStorage(Storage):
                     self._closeSCPClient()
                     raise scp.SCPException('Error receiving, socket.timeout') from st
 
-    def push_file(self, local_path, remote_path):
+    def push_file(self, local_path, remote_path, lp=None, is_advanced=False):
         self._connectSFTPClient().put(local_path, remote_path)
 
     def mkdir(self, remote_path):

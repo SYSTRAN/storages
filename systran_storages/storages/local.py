@@ -42,7 +42,7 @@ class LocalStorage(Storage):
 
         return generate()
 
-    def push_file(self, local_path, remote_path):
+    def push_file(self, local_path, remote_path, lp=None, is_advanced=False):
         shutil.copy2(local_path, remote_path)
 
     def mkdir(self, remote_path):
