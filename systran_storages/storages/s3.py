@@ -85,7 +85,7 @@ class S3Storage(Storage):
         (local_dir, basename) = os.path.split(local_path)
         return os.path.join(local_dir, ".5dm#" + basename + "#md5")
 
-    def push_file(self, local_path, remote_path):
+    def push_file(self, local_path, remote_path, lp=None, is_advanced=False):
         (local_dir, basename) = os.path.split(local_path)
         md5_path = os.path.join(local_dir, ".5dm#" + basename + "#md5")
         if not remote_path:

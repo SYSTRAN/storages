@@ -419,7 +419,7 @@ class CMStorages(Storage):
         response = requests.get(self.host_url + '/corpus/exists', params=data)
         return response.status_code == 200 and "true" in str(response.content)
 
-    def push_file(self, local_path, remote_path, lp=None):
+    def push_file(self, local_path, remote_path, lp=None, is_advanced=False):
         if lp is None:
             lp = {}
         data = {
@@ -435,8 +435,6 @@ class CMStorages(Storage):
             data = f.read()
             format_path = self._get_format_from_local_path(local_path)
             import_options = {
-                "cleanFormatting": True,
-                "removeDuplicates": True,
                 "tidyLocale": True
             }
 
@@ -444,14 +442,24 @@ class CMStorages(Storage):
                 import_options["expectedSourceLanguage"] = lp.get('source', '')
                 import_options["expectedTargetLanguages"] = lp.get('targets', [])
 
+            if not is_advanced:
+                import_options["cleanFormatting"] = True
+                import_options["removeDuplicates"] = True
+                features = 'es1,fuzzy'
+            else:
+                features = 'es1'
+
+            options = [
+                ('accountId', self.account_id),
+                ('format', format_path),
+                ('importOptions', json.dumps(import_options)),
+                ('filename', self._create_path_from_root(remote_path)),
+                ('corpus', data),
+                ('features', features),
+            ]
+
             mp_encoder = MultipartEncoder(
-                [
-                    ('accountId', self.account_id),
-                    ('format', format_path),
-                    ('importOptions', json.dumps(import_options)),
-                    ('filename', self._create_path_from_root(remote_path)),
-                    ('corpus', data)
-                ]
+                options
             )
             response = requests.post(self.host_url + '/corpus/import', data=mp_encoder,
                                      headers={'Content-Type': mp_encoder.content_type})
