@@ -4,6 +4,7 @@ import contextlib
 import shutil
 import logging
 import platform
+from multiprocessing.dummy import Pool
 import six
 if platform.system() != 'Windows':
     import fcntl
@@ -86,7 +87,7 @@ class Storage:
         with lock(local_path):
             self._get_file_safe(remote_path, local_path)
 
-    def get(self, remote_path, local_path, directory=False, check_integrity_fn=None):
+    def get(self, remote_path, local_path, directory=False, check_integrity_fn=None, workers=1):
         """Get a file or a directory from a storage to a local file
         """
 
@@ -125,6 +126,7 @@ class Storage:
                     allfiles[os.path.join(root, f)] = 1
 
             list_remote_files = self.listdir(remote_path, recursive=True)
+            p = Pool(workers)
             for f in list_remote_files:
                 internal_path = self._internal_path(f)
                 norm_path = os.path.normpath(remote_path)
@@ -149,19 +151,21 @@ class Storage:
                             extra_path = os.path.join(local_path, extra_subpath)
                             if extra_path in allfiles:
                                 del allfiles[extra_path]
-                                checksum_file = self._get_checksum_file(path)
-                                if checksum_file is not None and checksum_file in allfiles:
-                                    del allfiles[checksum_file]
-                                metadata_file = self._get_metadata_file(path)
-                                if metadata_file is not None and metadata_file in allfiles:
-                                    del allfiles[metadata_file]
+                            checksum_file = self._get_checksum_file(path)
+                            if checksum_file is not None and checksum_file in allfiles:
+                                del allfiles[checksum_file]
+                            metadata_file = self._get_metadata_file(path)
+                            if metadata_file is not None and metadata_file in allfiles:
+                                del allfiles[metadata_file]
                     else:
                         if path in allfiles:
                             del allfiles[path]
                             checksum_file = self._get_checksum_file(path)
                             if checksum_file is not None and checksum_file in allfiles:
                                 del allfiles[checksum_file]
-                    self._sync_file(internal_path, path)
+                p.apply_async(self._sync_file, (internal_path, path))
+            p.close()
+            p.join()
             for f in allfiles:
                 os.remove(f)
             if allfiles:
