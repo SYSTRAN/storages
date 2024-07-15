@@ -296,6 +296,11 @@ class StorageClient:
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
         return client.similar(corpus_ids, search_options, input_corpus, output_corpus_name)
 
+    def intersection(self, remote_path, corpus_ids, intersection_options, input_corpus, storage_id=None):
+        """Extract a similar corpus from a large corpus dataset using an input corpus."""
+        client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
+        return client.intersection(corpus_ids, intersection_options, input_corpus)
+
     def tag_add(self, remote_path, corpus_id, tag, storage_id=None):
         """Add a tag associated with a corpus."""
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)

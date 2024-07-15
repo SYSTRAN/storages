@@ -583,6 +583,18 @@ class CMStorages(Storage):
                 'Cannot start similar search. %s' % response.text)
         return response.json()['id']
 
+    def intersection(self, corpus_ids, intersection_options, input_corpus):
+        params = {
+            'accountId': self.account_id,
+            **intersection_options,
+        }
+        response = requests.post(self.host_url + '/corpus/intersection', params=params, data={'id': corpus_ids},
+                                 files=[('corpus', input_corpus)])
+        if response.status_code != 200:
+            raise RuntimeError(
+                'Cannot start intersection search. %s' % response.text)
+        return response.json()
+
     def tag_add(self, corpus_id, tag):
         data = {
             'accountId': self.account_id,
