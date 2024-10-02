@@ -43,6 +43,7 @@ class Storage:
 
     def __init__(self, storage_id):
         self._storage_id = storage_id
+        self._allow_multithreading = True
 
     # Non conventional storage might need to override these.
     @staticmethod
@@ -126,6 +127,9 @@ class Storage:
                     allfiles[os.path.join(root, f)] = 1
 
             list_remote_files = self.listdir(remote_path, recursive=True)
+
+            if not self._allow_multithreading:
+                workers = 1
             p = Pool(workers)
             for f in list_remote_files:
                 internal_path = self._internal_path(f)
