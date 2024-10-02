@@ -23,6 +23,7 @@ class RemoteStorage(Storage):
 
     def __init__(self, storage_id, server, user, password, pkey=None, port=22, basedir=None):
         super().__init__(storage_id)
+        self._allow_multithreading = False
         self._server = server
         self._user = user
         self._password = password
