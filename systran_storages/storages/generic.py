@@ -163,7 +163,7 @@ class Storage:
                             checksum_file = self._get_checksum_file(path)
                             if checksum_file is not None and checksum_file in allfiles:
                                 del allfiles[checksum_file]
-                p.apply_async(self._sync_file, (internal_path, path))
+                    p.apply_async(self._sync_file, (internal_path, path))
             p.close()
             p.join()
             for f in allfiles:
