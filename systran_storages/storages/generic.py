@@ -254,9 +254,9 @@ class Storage:
         if self.isdir(remote_path):
             def rm_rec(path):
                 files = self.listdir(remote_path=path)
-                for f in files:
-                    internal_path = self._internal_path(f)
-                    if internal_path.endswith('/') and internal_path != path:
+                for file_path, file_info in files.items():
+                    internal_path = self._internal_path(file_path)
+                    if internal_path.endswith('/') and internal_path != path and file_info.get("size") != 0:
                         rm_rec(internal_path)
                     else:
                         self._delete_single(internal_path, False)
