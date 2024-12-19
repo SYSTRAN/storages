@@ -97,3 +97,6 @@ class HTTPStorage(Storage):
 
     def _internal_path(self, path):
         return path
+
+    def check_for_aliases(self, local_path):
+        return None

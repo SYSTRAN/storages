@@ -109,6 +109,15 @@ class CMStorages(Storage):
         json_format_path = local_path + '.jsonl.gz'
         return os.path.exists(json_format_path)
 
+    def check_for_aliases(self, local_path):
+        if self._alias_files_exist(local_path):
+            return local_path + ".jsonl.gz"
+        if local_path.endswith(".json"):
+            local_path_without_json = local_path[:-len(".json")]
+            if self._alias_files_exist(local_path_without_json):
+                return local_path_without_json + ".jsonl.gz"
+        return None
+
     def _check_existing_file(self, remote_path, local_path):
         local_path = self._create_path_from_root(local_path)
         checksum_path = self._get_checksum_file(local_path)
