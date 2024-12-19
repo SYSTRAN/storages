@@ -549,6 +549,8 @@ class CMStorages(Storage):
             return_value += '/' + self.path_without_starting_slash(remote_path)
         if return_value == '':
             return '/'
+        if return_value.endswith('.jsonl.gz'):
+            return_value = return_value[:-len(".jsonl.gz")]
         if return_value.endswith('.tmx') or return_value.endswith('.txt') or return_value.endswith('/'):
             return return_value
         custom_suffixes = [suffix + '.' for suffix in CORPUS_SUFFIX]
