@@ -331,3 +331,6 @@ class Storage:
         """Delete segments identified by id
         """
         raise NotImplementedError()
+
+    def check_for_aliases(self, local_path):
+        raise NotImplementedError()

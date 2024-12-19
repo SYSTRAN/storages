@@ -234,3 +234,6 @@ class S3Storage(Storage):
 
     def stream_corpus_manager(self, remote_id, remote_format, buffer_size=1024):
         pass
+
+    def check_for_aliases(self, local_path):
+        return None

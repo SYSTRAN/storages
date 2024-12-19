@@ -125,6 +125,14 @@ class StorageClient:
         """Retrieves a full directory from remote_path to local_path."""
         return self.get(remote_path, local_path, directory=True, storage_id=storage_id)
 
+    def local_exists(self, local_path, client):
+        if os.path.exists(local_path):
+            return local_path
+        alias = client.check_for_aliases(local_path)
+        if alias:
+            return alias
+        raise RuntimeError('Failed to synchronize %s' % local_path)
+
     def get(self,
             remote_path,
             local_path,
@@ -141,8 +149,7 @@ class StorageClient:
             directory=directory,
             check_integrity_fn=check_integrity_fn,
             workers=workers)
-        if not os.path.exists(local_path):
-            raise RuntimeError('Failed to synchronize %s' % local_path)
+        return self.local_exists(local_path, client)
 
     def stat(self, remote_path, storage_id=None):
         """Returns stat on remote_path file
