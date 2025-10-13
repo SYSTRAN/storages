@@ -77,11 +77,13 @@ class Storage:
 
     def _sync_file(self, remote_path, local_path):
         if os.path.isdir(local_path):
+            local_dir = local_path
             local_path = os.path.join(local_path, os.path.basename(remote_path))
         else:
             local_dir, basename = os.path.split(local_path)
             if not basename:
                 local_path = os.path.join(local_dir, os.path.basename(remote_path))
+        os.utime(local_dir)
         if self._check_existing_file(remote_path, local_path):
             return
         LOGGER.info('Downloading %s to %s', remote_path, local_path)
