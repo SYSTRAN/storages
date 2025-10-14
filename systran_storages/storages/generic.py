@@ -83,7 +83,8 @@ class Storage:
             local_dir, basename = os.path.split(local_path)
             if not basename:
                 local_path = os.path.join(local_dir, os.path.basename(remote_path))
-        os.utime(local_dir)
+        if os.path.isdir(local_dir):
+            os.utime(local_dir)
         if self._check_existing_file(remote_path, local_path):
             return
         LOGGER.info('Downloading %s to %s', remote_path, local_path)
