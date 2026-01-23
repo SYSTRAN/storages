@@ -85,6 +85,14 @@ class StorageClient:
                         config.get('host_url'),
                         account_id=config.get('account_id'),
                         root_folder=config.get('root_folder'))
+                elif config['type'] == 'corpus_manager_advanced':
+                    client = storages.CMAdvancedStorage(
+                        storage_id,
+                        config.get('db_host'),
+                        config.get('db_port'),
+                        config.get('db_name'),
+                        config.get('db_user'),
+                        config.get('db_password'))
                 elif config['type'] == 'local':
                     client = storages.LocalStorage(
                         storage_id,

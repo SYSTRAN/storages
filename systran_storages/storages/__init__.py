@@ -5,3 +5,4 @@ from systran_storages.storages.s3 import S3Storage
 from systran_storages.storages.ssh import RemoteStorage
 from systran_storages.storages.swift import SwiftStorage
 from systran_storages.storages.corpus import CMStorages
+from systran_storages.storages.corpus_advanced import CMAdvancedStorage
