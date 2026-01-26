@@ -330,3 +330,27 @@ class StorageClient:
         """Return the details of the corpus."""
         client, remote_path = self._get_storage(remote_path, storage_id=storage_id)
         return client.detail(corpus_id)
+
+    def get_random_aligned_segments(self, storage_id, total, src_language, tgt_language,
+                                   src_locale=None, tgt_locale=None,
+                                   corpus_name=None, file_pattern=None,
+                                   domain=None, formality=None,
+                                   src_to_tgt=None, tgt_to_src=None,
+                                   min_src_to_tgt_score=None, min_tgt_to_src_score=None):
+        """Get random aligned segment pairs from Corpus Manager Advanced storage."""
+        client, _ = self._get_storage('', storage_id=storage_id)
+        return client.get_random_aligned_segments(
+            total=total,
+            src_language=src_language,
+            tgt_language=tgt_language,
+            src_locale=src_locale,
+            tgt_locale=tgt_locale,
+            corpus_name=corpus_name,
+            file_pattern=file_pattern,
+            domain=domain,
+            formality=formality,
+            src_to_tgt=src_to_tgt,
+            tgt_to_src=tgt_to_src,
+            min_src_to_tgt_score=min_src_to_tgt_score,
+            min_tgt_to_src_score=min_tgt_to_src_score
+        )
