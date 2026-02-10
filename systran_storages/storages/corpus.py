@@ -3,8 +3,6 @@ import json
 from datetime import datetime
 import logging
 import os
-import random
-import time
 import uuid
 from operator import itemgetter
 
@@ -26,12 +24,6 @@ class CMStorages(Storage):
         self.host_url = host_url
         self.account_id = account_id
         self.resource_type = "corpusmanager"
-        self._http_connect_timeout = float(os.getenv('SYSTRAN_STORAGES_CM_CONNECT_TIMEOUT', '2'))
-        self._http_read_timeout = float(os.getenv('SYSTRAN_STORAGES_CM_READ_TIMEOUT', '300'))
-        self._http_retry_total = int(os.getenv('SYSTRAN_STORAGES_CM_RETRY_TOTAL', '4'))
-        self._http_retry_backoff = float(os.getenv('SYSTRAN_STORAGES_CM_RETRY_BACKOFF', '0.5'))
-        self._http_retry_max_backoff = float(os.getenv('SYSTRAN_STORAGES_CM_RETRY_MAX_BACKOFF', '4'))
-        self._http_retry_jitter = float(os.getenv('SYSTRAN_STORAGES_CM_RETRY_JITTER', '0.1'))
         if root_folder is None:
             self.root_folder = ''
         else:
@@ -41,32 +33,6 @@ class CMStorages(Storage):
             self.root_folder = self.root_folder[:-1]
         if self.host_url is None:
             raise ValueError('http storage %s can not handle host url' % self._storage_id)
-
-    def _request(self, method, path, retry=None, timeout=None, **kwargs):
-        method = method.upper()
-        if retry is None:
-            retry = method in ("GET", "HEAD", "OPTIONS")
-        if timeout is None and method in ("GET", "HEAD", "OPTIONS"):
-            timeout = (self._http_connect_timeout, self._http_read_timeout)
-        retries = self._http_retry_total if retry else 0
-        url = self.host_url + path
-        request_kwargs = dict(kwargs)
-        if timeout is not None:
-            request_kwargs["timeout"] = timeout
-        for attempt in range(retries + 1):
-            try:
-                return requests.request(method, url, **request_kwargs)
-            except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as exc:
-                if attempt >= retries:
-                    raise
-                delay = min(self._http_retry_max_backoff,
-                            self._http_retry_backoff * (2 ** attempt))
-                if self._http_retry_jitter > 0:
-                    delay += random.uniform(0, self._http_retry_jitter)
-                LOGGER.warning(
-                    "Corpus Manager request failed, retrying in %.2fs (%s %s, attempt %d/%d): %s",
-                    delay, method, path, attempt + 1, retries, exc)
-                time.sleep(delay)
 
     def _get_file_safe(self, remote_path, local_path):
         local_path = self._create_path_from_root(local_path)
@@ -95,7 +61,7 @@ class CMStorages(Storage):
         (local_dir, basename) = os.path.split(local_path)
         metadata_filename = os.path.join(local_dir, "." + basename + ".metadata")
 
-        corpus_detail_response = self._request('GET', '/corpus/details', params=params)
+        corpus_detail_response = requests.get(self.host_url + '/corpus/details', params=params)
         if corpus_detail_response.status_code != 200:
             raise RuntimeError('cannot get corpus details from %s (response code %d)' % (
              remote_path, corpus_detail_response.status_code))
@@ -103,7 +69,7 @@ class CMStorages(Storage):
         with open(metadata_filename, "w") as file_writer:
             file_writer.write(corpus_detail_response.text)
 
-        corpus_export_response = self._request('GET', '/corpus/export', params=params)
+        corpus_export_response = requests.get(self.host_url + '/corpus/export', params=params)
         if corpus_export_response.status_code != 200:
             raise RuntimeError(
                 'cannot get %s (response code %d)' % (remote_path, corpus_export_response.status_code))
@@ -117,7 +83,7 @@ class CMStorages(Storage):
             'accountId': self.account_id,
             'id': corpus.get("id")
         }
-        response = self._request('GET', '/corpus/details', params=params)
+        response = requests.get(self.host_url + '/corpus/details', params=params)
 
         if response.status_code != 200:
             raise RuntimeError(
@@ -186,7 +152,7 @@ class CMStorages(Storage):
         if remote_format == 'application/json':
             params["byChunk"] = "true"
 
-        response = self._request('GET', '/corpus/export', params=params)
+        response = requests.get(self.host_url + '/corpus/export', params=params)
         if response.status_code != 200:
             raise RuntimeError(
                 'cannot get %s (response code %d)' % response.status_code)
@@ -239,7 +205,7 @@ class CMStorages(Storage):
         if options:
             data.update(options)
 
-        response = self._request('GET', '/corpus/list', params=data)
+        response = requests.get(self.host_url + '/corpus/list', params=data)
         if response.status_code != 200:
             raise RuntimeError(
                 "Cannot list corpus from remote path: %s (response code %d)" % (remote_path, response.status_code))
@@ -299,7 +265,7 @@ class CMStorages(Storage):
             ('id', corpus_id),
         )
 
-        response = self._request('GET', '/corpus/delete', params=params)
+        response = requests.get(self.host_url + '/corpus/delete', params=params)
         if response.status_code != 200:
             raise RuntimeError(
                 'cannot delete the corpus "%s" (response code %d)' % (corpus_id, response.status_code))
@@ -311,7 +277,7 @@ class CMStorages(Storage):
             'prefix': self._create_path_from_root(remote_path),
             'accountId': self.account_id
         }
-        response = self._request('GET', '/corpus/list', data=data)
+        response = requests.get(self.host_url + '/corpus/list', data=data)
         list_objects = response.json()
         if "files" in list_objects:
             for key in list_objects["files"]:
@@ -447,7 +413,7 @@ class CMStorages(Storage):
             'directory': parentDirectory,
             'accountId': self.account_id
         }
-        response = self._request('GET', '/corpus/list', params=data)
+        response = requests.get(self.host_url + '/corpus/list', params=data)
         if "directories" in response.json():
             if directoryArray[-1] in response.json()["directories"]:
                 return True
@@ -461,7 +427,7 @@ class CMStorages(Storage):
             'filename': self._create_path_from_root(remote_path),
             'accountId': self.account_id
         }
-        response = self._request('GET', '/corpus/exists', params=data)
+        response = requests.get(self.host_url + '/corpus/exists', params=data)
         return response.status_code == 200 and "true" in str(response.content)
 
     def push_file(self, local_path, remote_path, lp=None, is_advanced=False):
@@ -472,7 +438,7 @@ class CMStorages(Storage):
             'accountId': self.account_id
         }
 
-        response = self._request('GET', '/corpus/exists', params=data)
+        response = requests.get(self.host_url + '/corpus/exists', params=data)
         if response.status_code == 200 and "true" in str(response.content):
             raise RuntimeError("Cannot push file: %s already exists"
                                % remote_path)
@@ -542,7 +508,7 @@ class CMStorages(Storage):
 
         data_partition_str = json.dumps(data_partition)
 
-        response = self._request('GET', '/corpus/exists', params=data)
+        response = requests.get(self.host_url + '/corpus/exists', params=data)
         if response.status_code == 200 and "true" in str(response.content):
             raise RuntimeError("Cannot push file: %s already exists"
                                % remote_path)
@@ -667,7 +633,7 @@ class CMStorages(Storage):
             'accountId': self.account_id,
             'id': corpus_id
         }
-        response = self._request('GET', '/corpus/details', params=params)
+        response = requests.get(self.host_url + '/corpus/details', params=params)
         return response.json().get('files')
 
     def bulk_modify(self, lp, corpus):
@@ -687,8 +653,8 @@ class CMStorages(Storage):
                 ('corpus', corpus)
             ]
         )
-        response = self._request('GET', '/corpus/segment/bulk', params=params, data=mp_encoder,
-                                 headers={'Content-Type': mp_encoder.content_type})
+        response = requests.get(self.host_url + '/corpus/segment/bulk', params=params, data=mp_encoder,
+                                headers={'Content-Type': mp_encoder.content_type})
         if response.status_code != 200:
             error_message = json.loads(response.content).get('error')
             if error_message:
@@ -718,7 +684,7 @@ class CMStorages(Storage):
         if notes:
             params['notes'] = notes
 
-        response = self._request('GET', '/corpus/edit/properties', params=params)
+        response = requests.get(self.host_url + '/corpus/edit/properties', params=params)
         if response.status_code != 200:
             error_message = json.loads(response.content).get('error')
             if error_message:
