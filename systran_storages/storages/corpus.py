@@ -687,8 +687,14 @@ class CMStorages(Storage):
                 ('corpus', corpus)
             ]
         )
-        response = self._request('GET', '/corpus/segment/bulk', params=params, data=mp_encoder,
-                                 headers={'Content-Type': mp_encoder.content_type})
+        response = self._request(
+            'POST',
+            '/corpus/segment/bulk',
+            params=params,
+            data=mp_encoder,
+            headers={'Content-Type': mp_encoder.content_type},
+            timeout=(self._http_connect_timeout, None),
+        )
         if response.status_code != 200:
             error_message = json.loads(response.content).get('error')
             if error_message:
