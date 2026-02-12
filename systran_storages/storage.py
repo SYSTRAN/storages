@@ -92,7 +92,11 @@ class StorageClient:
                         config.get('db_port'),
                         config.get('db_name'),
                         config.get('db_user'),
-                        config.get('db_password'))
+                        config.get('db_password'),
+                        ssh_host=config.get('ssh_host'),
+                        ssh_port=config.get('ssh_port', 22),
+                        ssh_user=config.get('ssh_user'),
+                        ssh_private_key=config.get('ssh_private_key'))
                 elif config['type'] == 'local':
                     client = storages.LocalStorage(
                         storage_id,

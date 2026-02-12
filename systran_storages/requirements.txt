@@ -6,3 +6,4 @@ scp
 python-swiftclient
 python-keystoneclient
 requests_toolbelt
+sshtunnel

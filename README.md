@@ -9,6 +9,7 @@ This library provides a generic interface for multiple file storages:
 * AWS S3 (https://aws.amazon.com/s3/)
 * OpenStack Object Storage service Swift (https://docs.openstack.org/api-ref/object-store/)
 * custom HTTP storage
+* Corpus Manager Advanced (PostgreSQL database with optional SSH tunnel)
 
 ## Installation
 
@@ -41,7 +42,7 @@ Configurations `DEFI` are JSON dictionary with following fields:
 ```json
 {
 	"description": "description of the storage (optional)",
-	"type": "local|ssh|s3|swift|http",
+	"type": "local|ssh|s3|swift|http|corpus_manager_advanced",
 	[STORAGE_OPTIONS]
 }
 ```
@@ -125,3 +126,62 @@ Note HTTP storages do not define all the possible functions:
 
 * `rename` is not defined
 * `exists` and `listdir` are defined only if `pattern_list` option is defined.
+
+### Corpus Manager Advanced
+
+Type of the service is `corpus_manager_advanced`.
+
+This storage connects to a PostgreSQL database for the Corpus Manager Advanced system. It supports both local and remote database connections via SSH tunnel.
+
+_Storage options_:
+
+* (required) `db_host`: database host
+* (required) `db_port`: database port
+* (required) `db_name`: database name
+* (required) `db_user`: database user
+* (required) `db_password`: database password
+* (optional) `ssh_host`: SSH server host for tunnel connection
+* (optional) `ssh_port`: SSH server port
+* (optional) `ssh_user`: SSH username
+* (optional) `ssh_private_key`: path to SSH private key file (if not using ssh-agent)
+
+_Example - Local connection:_
+
+```python
+config = {
+    "cma": {
+        "type": "corpus_manager_advanced",
+        "db_host": "localhost",
+        "db_port": 5432,
+        "db_name": "cma-dev",
+        "db_user": "pgcma",
+        "db_password": "password"
+    }
+}
+client = StorageClient(config=config)
+```
+
+_Example - Remote connection via SSH tunnel:_
+
+```python
+config = {
+    "cma": {
+        "type": "corpus_manager_advanced",
+        "db_host": "localhost",
+        "db_port": 5432,
+        "db_name": "cma-dev",
+        "db_user": "pgcma",
+        "db_password": "password",
+        "ssh_host": "xx.xx.xx.xxx",
+        "ssh_port": 4944,
+        "ssh_user": "ssh_user"
+    }
+}
+client = StorageClient(config=config)
+```
+
+Note: When using SSH tunnel, ensure your SSH key is loaded in ssh-agent (`ssh-add /path/to/key`) or specify `ssh_private_key`.
+
+_Available methods:_
+
+* `get_random_aligned_segments(storage_id, total, src_language, tgt_language, ...)`: retrieve random aligned segment pairs from the database.
