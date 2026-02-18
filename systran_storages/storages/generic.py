@@ -144,14 +144,18 @@ class Storage:
                     if not os.path.isdir(path):
                         os.makedirs(path)
                 else:
+                    # ignore "error" or "uploading" corpus come from CorpusManager storage
+                    if list_remote_files[f].get('status') in ['error', 'pending']:
+                        LOGGER.warning(
+                            "{} cannot be used for training (status: '{}')"
+                            .format(f, list_remote_files[f].get('status'))
+                        )
+                        continue
                     dir_path = os.path.dirname(path)
                     if not os.path.isdir(dir_path):
                         os.makedirs(dir_path)
                     if list_remote_files[f].get('alias_names'):
                         for extra_filename in list_remote_files[f].get('alias_names'):
-                            # ignore "error" or "uploading" corpus come from CorpusManager storage
-                            if list_remote_files[f].get('status') in ['error', 'pending']:
-                                continue
                             extra_internal_path = self._internal_path(extra_filename)
                             assert extra_internal_path.startswith(norm_path)
                             extra_subpath = extra_internal_path[len(norm_path) + 1:]
