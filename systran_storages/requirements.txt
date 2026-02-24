@@ -4,5 +4,5 @@ paramiko
 requests
 scp
 python-swiftclient
-python-keystoneclient
+python-keystoneclient==5.6.0
 requests_toolbelt
